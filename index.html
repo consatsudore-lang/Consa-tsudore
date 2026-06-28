@@ -120,7 +120,8 @@
   .config-warn{margin:20px 16px;padding:16px;border:1px solid var(--gold);border-radius:12px;background:rgba(242,194,0,.08);font-size:12.5px;color:#e8d9a0;line-height:1.7}
   .auth-wrap{flex:1;display:flex;flex-direction:column;justify-content:center;padding:30px 24px}
   .auth-logo{text-align:center;margin-bottom:28px}
-  .auth-logo .big{font-size:26px;font-weight:900;color:var(--snow);letter-spacing:.04em}
+  .auth-logo .big{font-size:26px;font-weight:900;color:var(--snow);letter-spacing:.04em;display:flex;align-items:center;justify-content:center;gap:9px}
+  .auth-logo .big svg{width:40px;height:auto;flex:none}
   .auth-logo .small{font-size:12px;color:var(--sub);margin-top:6px}
   .auth-card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:22px 20px}
   .auth-tabs{display:flex;gap:8px;margin-bottom:18px}
@@ -260,7 +261,7 @@
 <div class="phone">
   <div id="auth" class="view active">
     <div class="auth-wrap">
-      <div class="auth-logo"><div class="big">★ コンサつどーれ</div><div class="small">同じ試合を観戦するコンサ仲間と、キックオフ前から。</div></div>
+      <div class="auth-logo"><div class="big"><svg viewBox="0 0 64 38" aria-hidden="true"><path d="M9 13 L31 26 C22 30 14 29 11 24 C8 21 8 15 9 13 Z" fill="#E4002B"/><path d="M55 13 L33 26 C42 30 50 29 53 24 C56 21 56 15 55 13 Z" fill="#E4002B"/></svg>コンサつどーれ</div><div class="small">同じ試合を観戦するコンサ仲間と、キックオフ前から。</div></div>
       <div class="auth-card">
         <div class="auth-tabs">
           <div class="auth-tab on" id="tab-login" onclick="setMode('login')">ログイン</div>
