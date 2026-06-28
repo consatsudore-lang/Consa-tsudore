@@ -1,0 +1,1222 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>コンサつどーれ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root{--bg:#0E0E10;--card:#17171B;--card2:#1F1F25;--red:#E4002B;--red-deep:#A8001F;--snow:#F5F5F7;--sub:#86868F;--line:#2A2A30;--gold:#F2C200;--green:#7fe0a0}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:#000;font-family:'Noto Sans JP',sans-serif;color:var(--snow);display:flex;justify-content:center;min-height:100vh;-webkit-font-smoothing:antialiased}
+  .phone{width:100%;max-width:480px;background:var(--bg);min-height:100vh;position:relative;display:flex;flex-direction:column;overflow:hidden}
+  .top{background:linear-gradient(105deg,var(--red-deep),var(--red) 60%,#7a0018);padding:18px 20px 16px;position:relative;overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:space-between}
+  .top::after{content:"";position:absolute;right:-30px;top:-30px;width:130px;height:130px;border-radius:50%;background:radial-gradient(circle at 30% 30%,rgba(255,255,255,.18),transparent 60%)}
+  .brand{display:flex;align-items:center;gap:10px;position:relative;z-index:2}
+  .crest{width:34px;height:34px;border-radius:10px;background:#0E0E10;display:grid;place-items:center;flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,.3)}
+  .crest svg{width:26px;height:26px;display:block}
+  .brand h1{font-size:18px;font-weight:900;letter-spacing:.04em}
+  .brand .sub{font-size:11px;color:rgba(255,255,255,.8);font-weight:500;margin-top:2px}
+  .logout{position:relative;z-index:2;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.3);color:#fff;font-size:10px;font-weight:700;padding:5px 10px;border-radius:8px;cursor:pointer}
+  .navbar{display:flex;gap:6px;padding:10px 14px;background:var(--bg);border-bottom:1px solid var(--line);flex-shrink:0}
+  .navtab{flex:1;padding:9px;border-radius:9px;font-family:inherit;font-size:12.5px;font-weight:700;cursor:pointer;background:var(--card2);color:var(--sub);border:1px solid var(--line)}
+  .navtab.on{background:linear-gradient(135deg,var(--red),var(--red-deep));color:#fff;border-color:transparent}
+  .scroll{flex:1;overflow-y:auto;padding-bottom:30px}
+  .scroll::-webkit-scrollbar{width:0}
+  .section-label{font-size:11px;font-weight:700;color:var(--sub);letter-spacing:.14em;padding:18px 20px 8px;display:flex;align-items:center;gap:8px}
+  .section-label::before{content:"";width:14px;height:2px;background:var(--red)}
+  .match{background:var(--card);margin:0 14px 12px;border-radius:16px;border:1px solid var(--line);overflow:hidden;cursor:pointer;transition:transform .12s ease}
+  .match:active{transform:scale(.985)}
+  .match.home{border-left:3px solid var(--red)}
+  .match-head{padding:13px 15px 11px;display:flex;justify-content:space-between;align-items:flex-start}
+  .match-when{font-size:11px;color:var(--sub);font-weight:500;margin-bottom:3px}
+  .badge{font-size:9.5px;font-weight:700;padding:2px 7px;border-radius:6px;letter-spacing:.05em}
+  .badge.h{background:rgba(228,0,43,.16);color:#ff5a78}
+  .badge.a{background:rgba(255,255,255,.08);color:#b9b9c0}
+  .vs{padding:2px 15px 14px;display:flex;align-items:center;gap:12px}
+  .team{display:flex;flex-direction:column;align-items:center;gap:6px;flex:1}
+  .team .dot{width:40px;height:40px;border-radius:11px;display:grid;place-items:center;font-weight:900;font-size:14px}
+  .team.us .dot{background:linear-gradient(135deg,var(--red),var(--red-deep));color:#fff}
+  .team.them .dot{background:var(--card2);color:#c9c9d0;border:1px solid var(--line)}
+  .team span{display:inline-block;font-size:14px;font-weight:800;text-align:center;padding:6px 13px;border-radius:9px;letter-spacing:.02em}
+  .team.us span{background:linear-gradient(135deg,var(--red),var(--red-deep));color:#fff;box-shadow:0 2px 6px rgba(228,0,43,.28)}
+  .team.them span{background:var(--card2);color:var(--snow);border:1px solid var(--line)}
+  .vs .x{font-size:11px;color:var(--sub);font-weight:700}
+  .venue{font-size:10.5px;color:var(--sub);padding:0 15px 12px;display:flex;align-items:center;gap:5px}
+  .going{background:var(--card2);border-top:1px solid var(--line);padding:11px 15px;display:flex;align-items:center;justify-content:space-between}
+  .going-count b{font-size:17px;font-weight:900;color:var(--snow)}
+  .going-count span{font-size:11px;color:var(--sub);font-weight:500}
+  .going-cta{font-size:12px;font-weight:700;color:#ff7088}
+  .view{display:none}
+  .view.active{display:flex;flex-direction:column;flex:1;overflow:hidden}
+  .detail-scroll{flex:1;overflow-y:auto;padding-bottom:30px}
+  .detail-scroll::-webkit-scrollbar{width:0}
+  .back{padding:14px 18px 6px;font-size:13px;color:var(--sub);font-weight:600;cursor:pointer}
+  .detail-hero{margin:6px 16px 0;background:var(--card);border-radius:18px;border:1px solid var(--line);padding:18px;text-align:center}
+  .detail-hero .when{font-size:12px;color:var(--sub);font-weight:600;margin-bottom:14px}
+  .detail-hero .matchup{display:flex;align-items:center;justify-content:center;gap:18px}
+  .detail-hero .dot{width:52px;height:52px;border-radius:14px;display:grid;place-items:center;font-weight:900;font-size:17px;margin-bottom:8px}
+  .detail-hero .us .dot{background:linear-gradient(135deg,var(--red),var(--red-deep));color:#fff}
+  .detail-hero .them .dot{background:var(--card2);color:#c9c9d0;border:1px solid var(--line)}
+  .detail-hero .matchup span{display:inline-block;font-size:16px;font-weight:800;padding:7px 16px;border-radius:10px;letter-spacing:.02em}
+  .detail-hero .us span{background:linear-gradient(135deg,var(--red),var(--red-deep));color:#fff;box-shadow:0 2px 8px rgba(228,0,43,.3)}
+  .detail-hero .them span{background:var(--card2);color:var(--snow);border:1px solid var(--line)}
+  .detail-hero .x{font-size:13px;color:var(--sub);font-weight:700}
+  .detail-venue{font-size:11px;color:var(--sub);margin-top:14px}
+  .panel-label{font-size:12px;font-weight:700;color:var(--snow);padding:18px 20px 10px;letter-spacing:.03em;display:flex;align-items:center;gap:7px}
+  .panel-label .n{background:var(--red);color:#fff;font-size:11px;min-width:20px;height:20px;border-radius:7px;display:grid;place-items:center;font-weight:900;padding:0 4px}
+  .goer{margin:0 16px 9px;background:var(--card);border:1px solid var(--line);border-radius:13px;padding:12px 14px;display:flex;gap:11px;align-items:flex-start;cursor:pointer}
+  .goer .av{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;font-size:13px;font-weight:700;color:#fff;flex-shrink:0;background:var(--red-deep)}
+  .goer-name{font-size:13px;font-weight:700;display:flex;align-items:center;gap:7px}
+  .goer-msg{font-size:12px;color:#c2c2c9;margin-top:4px;line-height:1.5}
+  .me-tag{font-size:9px;font-weight:700;padding:1px 6px;border-radius:5px;background:rgba(127,224,160,.16);color:var(--green)}
+  .empty{margin:0 16px 9px;padding:18px 16px;text-align:center;font-size:12px;color:var(--sub);border:1px dashed var(--line);border-radius:13px;line-height:1.6}
+  .rec{margin:0 16px 9px;background:var(--card);border:1px solid var(--line);border-radius:13px;padding:11px 14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .rec.skip{opacity:.5}
+  .rec-main{flex:1;min-width:130px}
+  .rec-when{font-size:10.5px;color:var(--sub);font-weight:600}
+  .rec-vs{font-size:14px;font-weight:800;color:var(--snow);margin-top:2px}
+  .rec-right{display:flex;flex-direction:column;align-items:flex-end;gap:6px}
+  .rec-status{font-size:12px;font-weight:700}
+  .rec-on{color:var(--green)}
+  .rec-off{color:var(--sub)}
+  .rec-toggle{font-family:inherit;font-size:11px;font-weight:700;color:#ff7088;background:transparent;border:1px solid var(--line);border-radius:8px;padding:6px 10px;cursor:pointer;white-space:nowrap}
+  .label-hint{font-size:9.5px;color:var(--sub);font-weight:500;letter-spacing:0;margin-left:6px}
+  .season-tabs{display:flex;gap:6px;flex-wrap:wrap;padding:0 16px 10px}
+  .season-tab{font-family:inherit;font-size:11.5px;font-weight:700;color:var(--sub);background:var(--card2);border:1px solid var(--line);border-radius:8px;padding:6px 11px;cursor:pointer}
+  .season-tab.on{background:linear-gradient(135deg,var(--red),var(--red-deep));color:#fff;border-color:transparent}
+  .season-head{margin:0 16px 9px;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:4px 2px}
+  .season-name{font-size:13px;font-weight:800;color:var(--snow)}
+  .season-cnt{font-size:12px;color:var(--sub);font-weight:600;white-space:nowrap}
+  .season-cnt b{font-size:16px;color:var(--gold);font-weight:900;margin:0 1px}
+  .field{margin:6px 16px}
+  .field input,.field textarea{width:100%;background:var(--card2);border:1px solid var(--line);border-radius:11px;padding:12px 14px;color:var(--snow);font-family:inherit;font-size:13.5px;outline:none;margin-bottom:8px}
+  .field input:focus,.field textarea:focus{border-color:var(--red)}
+  .field textarea{resize:vertical;min-height:44px}
+  .btn{width:calc(100% - 32px);margin:4px 16px 8px;padding:14px;border-radius:12px;border:none;background:linear-gradient(135deg,var(--red),var(--red-deep));color:#fff;font-family:inherit;font-size:14px;font-weight:900;letter-spacing:.04em;cursor:pointer}
+  .btn:active{transform:scale(.98)}
+  .btn:disabled{opacity:.5}
+  .btn.joined{background:var(--card2);color:var(--green);border:1px solid #2f5e42}
+  .btn.ghost{background:transparent;border:1px dashed var(--line);color:#ff7088}
+  .prof-safety{display:flex;flex-wrap:wrap;gap:16px;justify-content:center;margin:18px 16px 4px}
+  .text-link{background:none;border:none;color:var(--sub);font-size:12px;font-family:inherit;cursor:pointer;text-decoration:underline;padding:4px}
+  .text-link:active{color:#ff7088}
+  .msg-del{font-size:9px;color:rgba(255,255,255,.55);margin-left:8px;cursor:pointer;text-decoration:underline}
+  .msg.them .msg-del{color:var(--sub)}
+  .post-del{font-size:11px;flex-shrink:0}
+  .blocked-note{flex-basis:100%;text-align:center;font-size:11.5px;color:#ff7088;background:rgba(227,6,19,.08);border:1px solid var(--line);border-radius:10px;padding:9px;line-height:1.6}
+  .post{margin:0 16px 8px;background:var(--card);border:1px solid var(--line);border-radius:13px;padding:11px 13px}
+  .post-head{display:flex;align-items:center;gap:8px}
+  .post-av{width:30px;height:30px;border-radius:50%;overflow:hidden;flex-shrink:0;cursor:pointer;background:var(--red-deep);display:grid;place-items:center;font-size:11px;font-weight:700;color:#fff}
+  .post-name{font-size:12px;font-weight:700;display:flex;align-items:center;gap:7px;cursor:pointer}
+  .post-time{font-size:10px;color:var(--sub);font-weight:400}
+  .post-text{font-size:12.5px;color:#d2d2d8;margin-top:4px;line-height:1.5}
+  .toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--snow);color:#0E0E10;font-size:12.5px;font-weight:700;padding:11px 18px;border-radius:12px;opacity:0;pointer-events:none;transition:all .3s;z-index:50;box-shadow:0 8px 30px rgba(0,0,0,.5)}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .loading{text-align:center;color:var(--sub);font-size:12px;padding:30px}
+  .config-warn{margin:20px 16px;padding:16px;border:1px solid var(--gold);border-radius:12px;background:rgba(242,194,0,.08);font-size:12.5px;color:#e8d9a0;line-height:1.7}
+  .auth-wrap{flex:1;display:flex;flex-direction:column;justify-content:center;padding:30px 24px}
+  .auth-logo{text-align:center;margin-bottom:28px}
+  .auth-logo .big{font-size:26px;font-weight:900;color:var(--snow);letter-spacing:.04em}
+  .auth-logo .small{font-size:12px;color:var(--sub);margin-top:6px}
+  .auth-card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:22px 20px}
+  .auth-tabs{display:flex;gap:8px;margin-bottom:18px}
+  .auth-tab{flex:1;text-align:center;padding:9px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;background:var(--card2);color:var(--sub);border:1px solid var(--line)}
+  .auth-tab.on{background:linear-gradient(135deg,var(--red),var(--red-deep));color:#fff;border-color:transparent}
+  .auth-card label{font-size:11px;color:var(--sub);display:block;margin:10px 2px 5px}
+  .auth-card input{width:100%;background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:12px 14px;color:var(--snow);font-family:inherit;font-size:14px;outline:none}
+  .auth-card input:focus{border-color:var(--red)}
+  .consentRow{display:none;margin-top:14px}
+  .consentRow.show{display:block}
+  .consent-check{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--snow)}
+  .consent-check input{width:auto;accent-color:var(--red)}
+  .consent-links{display:flex;gap:16px;margin:8px 0 0 26px}
+  .doc{padding:6px 20px 36px;font-size:12.5px;line-height:1.85;color:#d2d2da}
+  .doc h4{font-size:13px;color:var(--snow);margin:18px 0 5px;font-weight:700}
+  .doc p{margin:0 0 7px}
+  .doc .fillin{background:rgba(242,194,0,.14);color:#f0d98a;border-radius:4px;padding:0 4px}
+  .doc .note{font-size:11.5px;color:var(--sub);background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px;line-height:1.7;margin-bottom:6px}
+  .auth-btn{width:100%;margin-top:18px;padding:14px;border-radius:11px;border:none;background:linear-gradient(135deg,var(--red),var(--red-deep));color:#fff;font-family:inherit;font-size:14px;font-weight:900;cursor:pointer}
+  .auth-btn:active{transform:scale(.98)}
+  .auth-btn:disabled{opacity:.5}
+  .auth-note{font-size:11px;color:var(--sub);text-align:center;margin-top:14px;line-height:1.6}
+  .nameField{display:none}
+  .nameField.show{display:block}
+  .mypage-head{display:flex;align-items:center;gap:14px;padding:20px}
+  .mypage-av{width:54px;height:54px;border-radius:50%;background:linear-gradient(135deg,var(--red),var(--red-deep));display:grid;place-items:center;font-size:22px;font-weight:900;color:#fff;flex-shrink:0}
+  .mypage-name{font-size:18px;font-weight:900}
+  .mypage-sub{font-size:12px;color:var(--sub);margin-top:3px}
+  .avatar-change{display:inline-block;margin-top:7px;font-size:11px;font-weight:700;color:#ff7088;cursor:pointer}
+  .mypage-counts{display:flex;gap:18px;padding:0 20px 6px}
+  .mpc{font-size:12px;color:var(--sub)}
+  .mpc b{color:var(--snow);font-size:15px;font-weight:900;margin-right:3px}
+  /* profile */
+  .prof-hero{text-align:center;padding:14px 0 4px}
+  .prof-av{width:72px;height:72px;border-radius:50%;display:grid;place-items:center;font-size:28px;font-weight:900;color:#fff;margin:0 auto 12px;background:linear-gradient(135deg,var(--red),var(--red-deep))}
+  .prof-name{font-size:19px;font-weight:900}
+  .prof-style{display:inline-block;font-size:11px;font-weight:700;padding:3px 12px;border-radius:8px;background:rgba(228,0,43,.16);color:#ff5a78;margin-top:8px}
+  .prof-bio{font-size:12.5px;color:#c2c2c9;margin:12px 24px 0;line-height:1.6;text-align:center}
+  .prof-follow-row{display:flex;gap:18px;justify-content:center;margin-top:14px}
+  .pfr{font-size:12px;color:var(--sub)}
+  .pfr b{color:var(--snow);font-size:15px;font-weight:900;margin-right:3px}
+  /* meetup */
+  .meet-card{margin:0 16px 9px;background:var(--card);border:1px solid var(--line);border-radius:13px;padding:13px 14px}
+  .meet-card.mine{border-color:#2f5e42}
+  .meet-top{display:flex;gap:9px;align-items:center;margin-bottom:8px}
+  .meet-top .av{width:30px;height:30px;border-radius:50%;background:var(--red-deep);display:grid;place-items:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0;cursor:pointer}
+  .meet-host{font-size:12px;font-weight:700}
+  .meet-kind{font-size:10px;font-weight:700;padding:2px 8px;border-radius:6px;margin-left:auto}
+  .meet-kind.drink{background:rgba(228,0,43,.16);color:#ff5a78}
+  .meet-kind.meal{background:rgba(242,166,0,.16);color:#ffbf3f}
+  .meet-title{font-size:13.5px;font-weight:700;margin-bottom:7px;line-height:1.4}
+  .meet-meta{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+  .meet-chip{font-size:10.5px;font-weight:600;color:#c2c2c9;background:var(--card2);border:1px solid var(--line);padding:3px 9px;border-radius:7px}
+  .meet-foot{display:flex;align-items:center;justify-content:space-between}
+  .meet-slots{font-size:11px;color:var(--sub)}
+  .meet-slots b{color:var(--snow);font-weight:900;font-size:13px}
+  .apply-btn{font-size:12px;font-weight:700;padding:7px 16px;border-radius:9px;border:none;cursor:pointer;font-family:inherit;background:linear-gradient(135deg,var(--red),var(--red-deep));color:#fff}
+  .apply-btn.applied{background:var(--card2);color:var(--green);border:1px solid #2f5e42}
+  .apply-btn.cancel{background:transparent;color:var(--sub);border:1px solid var(--line)}
+  .host-actions{display:flex;gap:8px}
+  .meet-slots.full{color:#ff7088;font-weight:800}
+  .group-from-meet{margin-top:10px;width:100%;background:rgba(227,6,19,.10);border:1px solid var(--red);color:#ff7088;border-radius:10px;padding:9px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit}
+  .group-from-meet:active{transform:scale(.99)}
+  .danger-zone{margin:30px 16px 10px;padding-top:16px;border-top:1px solid var(--line);text-align:center}
+  .danger-btn{background:transparent;border:none;color:var(--sub);font-size:12px;cursor:pointer;font-family:inherit;text-decoration:underline;padding:8px}
+  .danger-btn:active{color:#ff7088}
+  .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:flex-end;justify-content:center;z-index:60}
+  .modal-bg.show{display:flex}
+  .modal{background:var(--card);border-top-left-radius:20px;border-top-right-radius:20px;width:100%;max-width:480px;padding:20px;max-height:85vh;overflow-y:auto}
+  .modal h3{font-size:15px;font-weight:900;margin-bottom:14px}
+  .modal label{font-size:11px;color:var(--sub);display:block;margin:10px 2px 5px}
+  .modal input,.modal select,.modal textarea{width:100%;background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:11px 13px;color:var(--snow);font-family:inherit;font-size:13.5px;outline:none}
+  .modal input:focus,.modal select:focus,.modal textarea:focus{border-color:var(--red)}
+  .modal-actions{display:flex;gap:9px;margin-top:18px}
+  .modal-actions button{flex:1;padding:13px;border-radius:11px;border:none;font-family:inherit;font-size:13.5px;font-weight:700;cursor:pointer}
+  .modal-cancel{background:var(--card2);color:var(--sub);border:1px solid var(--line)!important}
+  .modal-ok{background:linear-gradient(135deg,var(--red),var(--red-deep));color:#fff}
+  .follow-btn{font-size:11px;font-weight:700;padding:6px 16px;border-radius:9px;cursor:pointer;font-family:inherit;background:linear-gradient(135deg,var(--red),var(--red-deep));color:#fff;border:none}
+  .follow-btn.following{background:transparent;color:var(--sub);border:1px solid var(--line)}
+  /* chat（1対1トーク） */
+  .chat-head{flex-shrink:0;border-bottom:1px solid var(--line)}
+  .chat-peer{display:flex;align-items:center;gap:10px;padding:2px 18px 12px}
+  .chat-peer .av{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;font-size:14px;font-weight:700;color:#fff;background:var(--red-deep);overflow:hidden;flex-shrink:0}
+  .chat-peer .nm{font-size:15px;font-weight:900}
+  .chat-scroll{flex:1;overflow-y:auto;padding:16px 14px 12px;display:flex;flex-direction:column;gap:8px}
+  .chat-scroll::-webkit-scrollbar{width:0}
+  .msg{max-width:76%;padding:9px 13px;border-radius:15px;font-size:13px;line-height:1.5;word-break:break-word}
+  .msg .t{display:block;font-size:9.5px;color:var(--sub);margin-top:4px;font-weight:500}
+  .msg.them{background:var(--card2);border:1px solid var(--line);align-self:flex-start;border-bottom-left-radius:5px}
+  .msg.me{background:linear-gradient(135deg,var(--red),var(--red-deep));color:#fff;align-self:flex-end;border-bottom-right-radius:5px}
+  .msg.me .t{color:rgba(255,255,255,.7)}
+  .chat-input-bar{flex-shrink:0;display:flex;gap:8px;padding:10px 14px;border-top:1px solid var(--line);background:var(--bg)}
+  .chat-input-bar input{flex:1;background:var(--card2);border:1px solid var(--line);border-radius:11px;padding:11px 14px;color:var(--snow);font-family:inherit;font-size:13.5px;outline:none}
+  .chat-input-bar input:focus{border-color:var(--red)}
+  .chat-input-bar button{background:linear-gradient(135deg,var(--red),var(--red-deep));color:#fff;border:none;border-radius:11px;padding:0 18px;font-family:inherit;font-size:13.5px;font-weight:700;cursor:pointer}
+  .chat-input-bar button:disabled{opacity:.5}
+  /* group（グループトーク） */
+  .group-card{margin:0 16px 10px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:transform .12s ease}
+  .group-card:active{transform:scale(.99)}
+  .group-card .gc-icon{width:44px;height:44px;border-radius:13px;background:linear-gradient(135deg,var(--red),var(--red-deep));display:grid;place-items:center;font-size:18px;flex-shrink:0}
+  .group-name{font-size:14px;font-weight:700}
+  .group-sub{font-size:11px;color:var(--sub);margin-top:3px}
+  .member-pick{max-height:240px;overflow-y:auto;margin-top:2px}
+  .member-row{display:flex;align-items:center;gap:11px;padding:9px 4px;border-bottom:1px solid var(--line);cursor:pointer}
+  .member-row .av{width:34px;height:34px;border-radius:50%;background:var(--red-deep);display:grid;place-items:center;font-size:12px;font-weight:700;color:#fff;overflow:hidden;flex-shrink:0}
+  .member-row .mn{font-size:13px;font-weight:600;flex:1}
+  .member-row .chk{width:22px;height:22px;border-radius:7px;border:2px solid var(--line);display:grid;place-items:center;font-size:13px;color:transparent;flex-shrink:0}
+  .member-row.sel .chk{background:var(--red);border-color:var(--red);color:#fff}
+  .msg .who{display:block;font-size:10px;color:var(--sub);font-weight:700;margin-bottom:3px}
+  .msg-row{display:flex;align-items:flex-end;gap:7px;max-width:86%;align-self:flex-start}
+  .msg-row .msg-av{width:28px;height:28px;border-radius:50%;overflow:hidden;flex-shrink:0;cursor:pointer;background:var(--red-deep);display:grid;place-items:center;font-size:10px;font-weight:700;color:#fff}
+  .msg-row .msg.them{max-width:100%}
+  /* プロフィール詳細＆編集 */
+  .prof-detail{margin:14px 16px 0;background:var(--card);border:1px solid var(--line);border-radius:13px;overflow:hidden}
+  .pd-row{display:flex;justify-content:space-between;gap:12px;padding:11px 14px;border-bottom:1px solid var(--line);font-size:12.5px}
+  .pd-row:last-child{border-bottom:none}
+  .pd-k{color:var(--sub);font-weight:600;flex-shrink:0}
+  .pd-v{color:var(--snow);text-align:right;font-weight:600;word-break:break-word}
+  .editlabel{font-size:11px;color:var(--sub);display:block;margin:14px 18px 5px;font-weight:600}
+  .field select{width:100%;background:var(--card2);border:1px solid var(--line);border-radius:11px;padding:12px 14px;color:var(--snow);font-family:inherit;font-size:13.5px;outline:none;margin-bottom:8px}
+  .field select:focus{border-color:var(--red)}
+  /* 共通点カード */
+  .common-card{margin:14px 16px 0;background:var(--card);border:1px solid var(--line);border-radius:13px;padding:14px}
+  .common-head{font-size:11px;font-weight:700;color:var(--sub);letter-spacing:.12em;margin-bottom:10px;display:flex;align-items:center;gap:7px}
+  .common-head::before{content:"";width:14px;height:2px;background:var(--red)}
+  .common-line{display:flex;gap:10px;align-items:flex-start;margin-bottom:10px}
+  .cl-ico{font-size:15px;line-height:1.4;flex-shrink:0}
+  .cl-title{font-size:13px;font-weight:700;margin-bottom:4px}
+  .cl-match{font-size:12px;color:#ff7088;font-weight:600;padding:6px 0;cursor:pointer;border-top:1px solid var(--line)}
+  .common-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+  .common-none{font-size:12px;color:var(--sub);line-height:1.6;margin-bottom:10px}
+  .common-stat{font-size:12px;color:#c2c2c9;border-top:1px solid var(--line);padding-top:10px}
+  .common-stat b{color:var(--snow);font-weight:900;font-size:14px;margin:0 2px}
+</style>
+</head>
+<body>
+<div class="phone">
+  <div id="auth" class="view active">
+    <div class="auth-wrap">
+      <div class="auth-logo"><div class="big">★ コンサつどーれ</div><div class="small">同じ試合を観戦するコンサ仲間と、キックオフ前から。</div></div>
+      <div class="auth-card">
+        <div class="auth-tabs">
+          <div class="auth-tab on" id="tab-login" onclick="setMode('login')">ログイン</div>
+          <div class="auth-tab" id="tab-signup" onclick="setMode('signup')">新規登録</div>
+        </div>
+        <div class="nameField" id="nameField"><label>ニックネーム（みんなに表示される名前）</label><input id="authName" placeholder="例：たけ"></div>
+        <label>メールアドレス</label><input id="authEmail" type="email" placeholder="you@example.com" autocomplete="email">
+        <label>パスワード</label><input id="authPass" type="password" placeholder="6文字以上" autocomplete="current-password">
+        <div class="consentRow" id="consentRow">
+          <label class="consent-check"><input type="checkbox" id="authAgree"> 下記に同意して登録します</label>
+          <div class="consent-links"><button type="button" class="text-link" onclick="openDoc('terms','auth')">利用規約</button><button type="button" class="text-link" onclick="openDoc('privacy','auth')">プライバシーポリシー</button></div>
+        </div>
+        <button class="auth-btn" id="authBtn" onclick="doAuth()">ログイン</button>
+        <div class="auth-note" id="authNote"></div>
+      </div>
+    </div>
+  </div>
+  <div class="top" id="appHeader" style="display:none">
+    <div class="brand"><div class="crest"><svg viewBox="0 0 64 38" aria-label="コンサつどーれ"><path d="M9 13 L31 26 C22 30 14 29 11 24 C8 21 8 15 9 13 Z" fill="#E4002B"/><path d="M55 13 L33 26 C42 30 50 29 53 24 C56 21 56 15 55 13 Z" fill="#E4002B"/></svg></div><div><h1>コンサつどーれ</h1><div class="sub" id="welcome">こんにちは</div></div></div>
+    <button class="logout" onclick="signOut()">ログアウト</button>
+  </div>
+  <div class="navbar" id="navbar" style="display:none">
+    <button class="navtab on" id="nav-home" onclick="go('home')">試合一覧</button>
+    <button class="navtab" id="nav-talk" onclick="openTalk()">トーク</button>
+    <button class="navtab" id="nav-mypage" onclick="openMypage()">マイページ</button>
+  </div>
+  <div id="home" class="view">
+    <div class="scroll"><div class="section-label">これからの試合</div><div id="matchList"><div class="loading">読み込み中…</div></div></div>
+  </div>
+  <div id="detail" class="view">
+    <div class="detail-scroll">
+      <div class="back" onclick="go('home')">‹ 試合一覧へ</div>
+      <div class="detail-hero" id="detailHero"></div>
+      <div class="panel-label">観戦予定の人 <span class="n" id="goCount">0</span></div>
+      <div id="goerList"></div>
+      <div class="field"><textarea id="joinComment" placeholder="一言コメント（例：ゴール裏にいます。初観戦の方も声かけて！）"></textarea></div>
+      <button class="btn" id="joinBtn" onclick="toggleJoin()">＋ 観戦予定にする</button>
+      <div class="panel-label">ご飯・打ち上げ募集 <span class="n" id="meetCount">0</span></div>
+      <div id="meetList"></div>
+      <button class="btn ghost" onclick="openMeetModal()">＋ ご飯・打ち上げを募集する</button>
+      <div class="panel-label">この試合の掲示板 <span class="n" id="postCount">0</span></div>
+      <div id="postList"></div>
+      <div class="field"><input id="postBody" placeholder="掲示板に書き込む…" onkeydown="if(event.key==='Enter')post()"></div>
+      <button class="btn" onclick="post()">掲示板に投稿</button>
+    </div>
+  </div>
+  <div id="mypage" class="view">
+    <div class="scroll">
+      <div class="mypage-head"><div class="mypage-av" id="mypageAv">?</div><div><div class="mypage-name" id="mypageName">サポーター</div><div class="mypage-sub" id="mypageStat">観戦予定を確認</div><label for="avatarInput" class="avatar-change">アイコンを変更</label><input type="file" id="avatarInput" accept="image/*" style="display:none" onchange="uploadAvatar(event)"></div></div>
+      <div class="mypage-counts"><div class="mpc"><b id="mpFollowing">0</b>フォロー中</div><div class="mpc"><b id="mpFollowers">0</b>フォロワー</div></div>
+      <button class="btn ghost" onclick="openEditProfile()">プロフィールを編集</button>
+      <div id="myProfDetail"></div>
+      <div class="section-label">観戦予定の試合</div>
+      <div id="myMatchList"><div class="loading">読み込み中…</div></div>
+      <div class="section-label">観戦実績<span class="label-hint">試合が終わると自動で追加／観戦しなかった場合は変更できます</span></div>
+      <div id="myRecordList"><div class="loading">読み込み中…</div></div>
+      <div class="section-label">フォロー中の仲間の観戦予定</div>
+      <div id="followFeed"><div class="loading">読み込み中…</div></div>
+      <div style="padding:10px 16px 0;text-align:center"><button class="text-link" onclick="openBlocked()">ブロックした人を管理</button></div>
+      <div class="consent-links" style="justify-content:center;margin:10px 16px 0"><button class="text-link" onclick="openDoc('terms','mypage')">利用規約</button><button class="text-link" onclick="openDoc('privacy','mypage')">プライバシーポリシー</button></div>
+      <div class="danger-zone"><button class="danger-btn" onclick="deleteAccount()">退会する（アカウントを削除）</button></div>
+    </div>
+  </div>
+  <div id="profile" class="view">
+    <div class="detail-scroll">
+      <div class="back" onclick="backFromProfile()">‹ 戻る</div>
+      <div class="prof-hero" id="profHero"></div>
+      <div style="padding:0 16px;display:flex;gap:9px;margin-top:14px"><button class="btn" id="profFollowBtn" style="width:auto;flex:1;margin:0" onclick="toggleFollowCurrent()">＋ フォロー</button><button class="btn ghost" id="profMsgBtn" style="width:auto;flex:1;margin:0" onclick="openChatFromProfile()">💬 メッセージ</button></div>
+      <div id="profCommon"></div>
+      <div id="profDetail"></div>
+      <div id="profSafety" class="prof-safety"></div>
+      <div class="section-label">観戦予定の試合</div>
+      <div id="profMatchList"></div>
+    </div>
+  </div>
+  <div id="terms" class="view">
+    <div class="detail-scroll">
+      <div class="back" onclick="backFromDoc()">‹ 戻る</div>
+      <div class="panel-label">利用規約</div>
+      <div class="doc">
+        <p>本規約は、コンサつどーれ（以下「運営者」）が提供する観戦仲間マッチングサービス「コンサつどーれ」（以下「本サービス」）の利用条件を定めるものです。利用者は、本規約に同意のうえ本サービスを利用するものとします。</p>
+        <h4>1. 本サービスについて</h4>
+        <p>本サービスは、同じ試合を観戦する人どうしが交流し、待ち合わせや食事・打ち上げの計画を共有するためのサービスです。特定のクラブ・団体の公式サービスではありません。</p>
+        <h4>2. 利用資格</h4>
+        <p>本サービスは年齢を問わずご利用いただけます。未成年の方は、保護者の同意を得たうえでご利用ください。利用者は、登録情報が正確であることを保証します。</p>
+        <h4>3. アカウント</h4>
+        <p>利用者は自己の責任でメールアドレス・パスワードを管理します。第三者による不正利用について運営者は責任を負いません。</p>
+        <h4>4. 禁止事項</h4>
+        <p>利用者は次の行為をしてはなりません。<br>・法令または公序良俗に反する行為<br>・他の利用者への迷惑行為、嫌がらせ、誹謗中傷、差別的言動<br>・なりすまし、虚偽情報の登録<br>・宗教・商品・サービス等の勧誘、営業、スパム行為<br>・出会い・性的目的での利用、その他本サービスの趣旨に反する利用<br>・本サービスの運営を妨げる行為</p>
+        <h4>5. 投稿内容</h4>
+        <p>利用者が投稿した内容の責任は利用者が負います。運営者は、規約に違反すると判断した投稿を、事前の通知なく削除し、または利用者の利用を停止できます。なお、いったん他の利用者に表示・取得された内容は、削除しても完全には取り消せない場合があります。</p>
+        <h4>6. 対面での交流について</h4>
+        <p>本サービスを通じて利用者どうしが実際に会う場合、その安全管理は各利用者の自己責任で行うものとします。会う相手・場所・行動の判断は利用者自身が行い、利用者間で生じたトラブル・損害について運営者は一切の責任を負いません。初対面の際は人の多い公共の場所を選ぶなど、十分にご注意ください。</p>
+        <h4>7. 免責</h4>
+        <p>運営者は、本サービスの内容・継続・不具合の有無について保証しません。本サービスの利用により生じた損害について、運営者は法令で認められる範囲で責任を負いません。</p>
+        <h4>8. 退会</h4>
+        <p>利用者はいつでも退会（アカウント削除）できます。退会するとアカウントおよび関連データは削除されます。</p>
+        <h4>9. 規約の変更</h4>
+        <p>運営者は、必要に応じて本規約を変更できます。変更後に本サービスを利用した場合、変更後の規約に同意したものとみなします。</p>
+        <h4>10. 準拠法・管轄</h4>
+        <p>本規約は日本法に準拠します。本サービスに関する紛争は、運営者所在地を管轄する裁判所を専属的合意管轄とします。</p>
+        <h4>11. お問い合わせ</h4>
+        <p>本サービスに関するお問い合わせは consatsudore@gmail.com までご連絡ください。</p>
+        <p style="margin-top:14px;color:var(--sub)">制定日：2026年6月28日</p>
+      </div>
+    </div>
+  </div>
+  <div id="privacy" class="view">
+    <div class="detail-scroll">
+      <div class="back" onclick="backFromDoc()">‹ 戻る</div>
+      <div class="panel-label">プライバシーポリシー</div>
+      <div class="doc">
+        <p>コンサつどーれ（以下「運営者」）は、「コンサつどーれ」（以下「本サービス」）における利用者の個人情報を、以下の方針に基づき取り扱います。</p>
+        <h4>1. 取得する情報</h4>
+        <p>・メールアドレス、パスワード（認証のため。パスワードは暗号化して保管されます）<br>・ニックネーム、自己紹介、応援スタイル、観戦エリア、出発地、推し選手、応援歴、プロフィール画像<br>・観戦予定、掲示板への投稿、メッセージ、フォロー、募集、ブロック・通報の内容<br>・利用に伴って生成される日時等の記録</p>
+        <h4>2. 利用目的</h4>
+        <p>・本サービスの提供、利用者どうしのマッチング・交流のため<br>・本人確認、不正利用や迷惑行為の防止・対応のため<br>・お問い合わせへの対応のため</p>
+        <h4>3. 第三者提供・委託</h4>
+        <p>運営者は、法令に基づく場合を除き、本人の同意なく個人情報を第三者に提供しません。本サービスは、データの保存・認証基盤として外部のクラウドサービス（Supabase 等）を利用しており、その範囲でデータの取り扱いを委託します。</p>
+        <h4>4. 公開される情報</h4>
+        <p>ニックネーム・プロフィール・投稿・観戦予定などは、本サービスの性質上、他の利用者に表示されます。公開されたくない情報は入力しないでください。</p>
+        <h4>5. 保存期間・削除</h4>
+        <p>個人情報は本サービスの提供に必要な期間保管します。利用者が退会した場合、アカウントおよび関連データは削除されます。</p>
+        <h4>6. 開示・訂正・削除の請求</h4>
+        <p>利用者は、自己の個人情報の確認・訂正・削除を、アプリ内の機能またはお問い合わせ窓口を通じて行うことができます。</p>
+        <h4>7. お問い合わせ</h4>
+        <p>個人情報の取り扱いに関するお問い合わせは consatsudore@gmail.com までご連絡ください。</p>
+        <p style="margin-top:14px;color:var(--sub)">制定日：2026年6月28日</p>
+      </div>
+    </div>
+  </div>
+  <div id="blocked" class="view">
+    <div class="detail-scroll">
+      <div class="back" onclick="openMypage()">‹ マイページへ</div>
+      <div class="panel-label">ブロックした人</div>
+      <div id="blockedList"><div class="loading">読み込み中…</div></div>
+    </div>
+  </div>
+  <div id="editProfile" class="view">
+    <div class="detail-scroll">
+      <div class="back" onclick="openMypage()">‹ マイページへ</div>
+      <div class="panel-label">プロフィールを編集</div>
+      <div class="editlabel">ニックネーム（みんなに表示される名前）</div>
+      <div class="field"><input id="epName" placeholder="例：たけ"></div>
+      <div class="editlabel">応援スタイル（短いひとこと）</div>
+      <div class="field"><input id="epStyle" placeholder="例：ゴール裏で声出し担当"></div>
+      <div class="editlabel">観戦エリア</div>
+      <div class="field"><select id="epWatch">
+        <option value="">未設定</option>
+        <option value="ゴール裏">ゴール裏</option>
+        <option value="メインスタンド">メインスタンド</option>
+        <option value="バックスタンド">バックスタンド</option>
+        <option value="自由席・その他">自由席・その他</option>
+      </select></div>
+      <div class="editlabel">出発地</div>
+      <div class="field"><select id="epHome">
+        <option value="">未設定</option>
+        <option value="札幌市内">札幌市内</option>
+        <option value="札幌近郊">札幌近郊</option>
+        <option value="道内（その他）">道内（その他）</option>
+        <option value="道外">道外</option>
+      </select></div>
+      <div class="editlabel">推し選手</div>
+      <div class="field"><input id="epPlayer" placeholder="例：背番号◯◯"></div>
+      <div class="editlabel">応援歴</div>
+      <div class="field"><input id="epYears" placeholder="例：10年以上 / 今シーズンから"></div>
+      <div class="editlabel">自己紹介</div>
+      <div class="field"><textarea id="epBio" placeholder="例：初観戦の方も気軽に声かけてください！"></textarea></div>
+      <button class="btn" id="epSaveBtn" onclick="saveProfile()">保存する</button>
+    </div>
+  </div>
+  <div id="chat" class="view">
+    <div class="chat-head">
+      <div class="back" onclick="backFromChat()">‹ 戻る</div>
+      <div class="chat-peer" id="chatPeer"></div>
+    </div>
+    <div class="chat-scroll" id="chatScroll"><div class="loading">読み込み中…</div></div>
+    <div class="chat-input-bar">
+      <input id="chatInput" placeholder="メッセージを入力…" onkeydown="if(event.key==='Enter')sendMessage()">
+      <button id="chatSendBtn" onclick="sendMessage()">送信</button>
+    </div>
+  </div>
+  <div class="toast" id="toast"></div>
+  <div id="talk" class="view">
+    <div class="scroll">
+      <div class="section-label">トーク（1対1）</div>
+      <div id="dmList"><div class="loading">読み込み中…</div></div>
+      <div class="section-label">グループ</div>
+      <div id="groupList"><div class="loading">読み込み中…</div></div>
+      <button class="btn" onclick="openCreateGroup()">＋ 新しいグループを作る</button>
+    </div>
+  </div>
+  <div id="groupChat" class="view">
+    <div class="chat-head">
+      <div class="back" onclick="go('talk')">‹ トーク一覧へ</div>
+      <div class="chat-peer" id="groupChatPeer"></div>
+    </div>
+    <div class="chat-scroll" id="groupChatScroll"><div class="loading">読み込み中…</div></div>
+    <div class="chat-input-bar">
+      <input id="groupChatInput" placeholder="メッセージを入力…" onkeydown="if(event.key==='Enter')sendGroupMessage()">
+      <button id="groupChatSendBtn" onclick="sendGroupMessage()">送信</button>
+    </div>
+  </div>
+  <div class="modal-bg" id="meetModal">
+    <div class="modal">
+      <h3 id="mkHeading">ご飯・打ち上げを募集</h3>
+      <label>種類</label>
+      <select id="mkKind"><option value="drink">🍺 飲み・打ち上げ</option><option value="meal">🍚 ご飯</option></select>
+      <label>タイトル</label><input id="mkTitle" placeholder="例：勝ったら祝杯！すすきので打ち上げ">
+      <label>場所</label><input id="mkPlace" placeholder="例：すすきの周辺">
+      <label>時間</label><input id="mkTime" placeholder="例：試合後 21:00〜">
+      <label>募集人数</label><input id="mkCap" type="number" value="4" min="1" max="20">
+      <div class="modal-actions"><button class="modal-cancel" onclick="closeMeetModal()">やめる</button><button class="modal-ok" id="mkSubmitBtn" onclick="submitMeetup()">募集する</button></div>
+    </div>
+  </div>
+  <div class="modal-bg" id="groupModal">
+    <div class="modal">
+      <h3>新しいグループを作る</h3>
+      <label>グループ名</label><input id="grName" placeholder="例：ゴール裏の仲間">
+      <label>メンバーを選ぶ（フォロー中の仲間から）</label>
+      <div class="member-pick" id="grMembers"></div>
+      <div class="modal-actions"><button class="modal-cancel" onclick="closeCreateGroup()">やめる</button><button class="modal-ok" onclick="createGroup()">作る</button></div>
+    </div>
+  </div>
+</div>
+<script src="config.js"></script>
+<script>
+  // SUPABASE_URL と SUPABASE_KEY は、同じフォルダの config.js から読み込みます。
+  // （キーを毎回貼り直さずに済むよう、設定だけ別ファイルに分けています）
+
+  let supa=null, current=null, me=null, myProfile=null, authMode='login', profUser=null, profFrom='detail', chatWith=null, groupWith=null, chatFrom='profile', editingMeetupId=null, blockedIds=new Set();
+  function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2200);}
+  const ini=(n)=>(n||'?').slice(0,1);
+  // クラブカラー（c1=主色 / c2=副色 / l=表示文字）。色が違っていたら教えてください、直します。
+  const TEAM_COLORS={
+    '札幌':{c1:'#c8102e',c2:'#000000',l:'札'},
+    '徳島':{c1:'#1a2a7a',c2:'#1a2a7a',l:'徳'},
+    '新潟':{c1:'#e8740c',c2:'#0b3c8c',l:'新'},
+    '大宮':{c1:'#f39800',c2:'#14223f',l:'大'},
+    '甲府':{c1:'#15206b',c2:'#e60012',l:'甲'},
+    '栃木C':{c1:'#102a8c',c2:'#f5d020',l:'栃'},
+    '仙台':{c1:'#1d2088',c2:'#d4af37',l:'仙'},
+    '大分':{c1:'#0066b3',c2:'#f4da40',l:'分'},
+    '宮崎':{c1:'#e8601c',c2:'#111111',l:'宮'},
+    'いわき':{c1:'#d7000f',c2:'#111111',l:'い'},
+    '磐田':{c1:'#00a0e9',c2:'#0075b3',l:'磐'},
+    '秋田':{c1:'#0067c0',c2:'#002d6b',l:'秋'},
+    '山形':{c1:'#11399a',c2:'#11399a',l:'山'},
+    '富山':{c1:'#1452a0',c2:'#5fb0e5',l:'富'},
+    '湘南':{c1:'#00a960',c2:'#38b6e3',l:'湘'},
+    '今治':{c1:'#0a3d91',c2:'#f6c400',l:'今'},
+    '八戸':{c1:'#00a7e1',c2:'#003a8c',l:'八'},
+    '鳥栖':{c1:'#e3007f',c2:'#1d2087',l:'鳥'},
+    '横浜FC':{c1:'#002b5c',c2:'#5fa8dc',l:'横'},
+    '藤枝':{c1:'#00a7db',c2:'#0075b0',l:'藤'},
+    '鹿児島':{c1:'#e60012',c2:'#1a2a6c',l:'鹿'}
+  };
+  // クラブカラーの円バッジ（主色/副色を斜めに分割。文字は影付きで見やすく）
+  function teamBadge(name){
+    const t=TEAM_COLORS[name]||{c1:'#3a3a44',c2:'#26262e',l:ini(name)};
+    return '<div class="dot" style="background:linear-gradient(135deg,'+t.c1+' 0%,'+t.c1+' 50%,'+t.c2+' 50%,'+t.c2+' 100%);color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.45);border:none">'+esc(t.l)+'</div>';
+  }
+  // アバター表示：画像があれば画像、なければ頭文字。avatarCache[uid]=url
+  const avatarCache={};
+  function avatarInner(name,url){
+    if(url){return '<img src="'+esc(url)+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';}
+    return ini(name);
+  }
+  // 複数ユーザーのアバターURLをまとめて取得してキャッシュ
+  async function cacheAvatars(uids){
+    const need=[...new Set(uids)].filter(u=>u&&!(u in avatarCache));
+    if(need.length===0)return;
+    const {data}=await supa.from('profiles').select('id,avatar_url').in('id',need);
+    (data||[]).forEach(p=>{avatarCache[p.id]=p.avatar_url||null;});
+    need.forEach(u=>{if(!(u in avatarCache))avatarCache[u]=null;});
+  }
+  function fmtDate(s){if(!s)return'';const d=new Date(s);const days=['日','月','火','水','木','金','土'];const h=String(d.getHours()).padStart(2,'0');const m=String(d.getMinutes()).padStart(2,'0');return (d.getMonth()+1)+'/'+d.getDate()+'('+days[d.getDay()]+') '+h+':'+m;}
+  // 試合の日付表示：日程テキスト(date_text)があればそれを優先（時間未定でも嘘の時刻を出さない）
+  function matchWhen(m){return (m&&m.date_text)?m.date_text:fmtDate(m?m.match_date:null);}
+  // 試合日を過ぎたか（試合日の翌日から「過去」とみなす）
+  function isPastMatch(m){if(!m||!m.match_date)return false;const md=new Date(m.match_date);if(isNaN(md))return false;const t=new Date();t.setHours(0,0,0,0);const d=new Date(md.getFullYear(),md.getMonth(),md.getDate());return d<t;}
+  // 観戦記録：attended が false のときだけ「行かなかった」。null/true は「行った」扱い
+  function didAttend(att){return !att||att.attended!==false;}
+  // 試合がどのシーズンか（Jの秋春制を想定し、7月以降を新シーズンの開始とみなす）
+  function seasonOf(m){if(!m||!m.match_date)return null;const md=new Date(m.match_date);if(isNaN(md))return null;const y=md.getFullYear();const mo=md.getMonth()+1;const sy=(mo>=7)?y:y-1;return sy+'/'+(sy+1);}
+  function seasonLabel(s){return s+'シーズン（カップ戦含む）';}
+  function timeAgo(s){const diff=(Date.now()-new Date(s).getTime())/1000;if(diff<60)return'たった今';if(diff<3600)return Math.floor(diff/60)+'分前';if(diff<86400)return Math.floor(diff/3600)+'時間前';return Math.floor(diff/86400)+'日前';}
+  function esc(s){return(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+  function go(v){document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));document.getElementById(v).classList.add('active');const nh=document.getElementById('nav-home'),nm=document.getElementById('nav-mypage'),nt=document.getElementById('nav-talk');if(nh&&nm){nh.classList.toggle('on',v==='home'||v==='detail');nm.classList.toggle('on',v==='mypage');}if(nt){nt.classList.toggle('on',v==='talk'||v==='chat'||v==='groupChat');}}
+
+  let docFrom='auth';
+  function openDoc(which,from){docFrom=from||'auth';go(which);}
+  function backFromDoc(){ if(docFrom==='mypage')openMypage();else go('auth'); }
+  function setMode(mode){authMode=mode;document.getElementById('tab-login').classList.toggle('on',mode==='login');document.getElementById('tab-signup').classList.toggle('on',mode==='signup');document.getElementById('nameField').classList.toggle('show',mode==='signup');document.getElementById('consentRow').classList.toggle('show',mode==='signup');document.getElementById('authBtn').textContent=mode==='login'?'ログイン':'登録する';document.getElementById('authNote').textContent='';}
+  async function doAuth(){
+    const email=document.getElementById('authEmail').value.trim();const pass=document.getElementById('authPass').value;
+    const note=document.getElementById('authNote');const btn=document.getElementById('authBtn');
+    if(!email||!pass){note.textContent='メールとパスワードを入力してください';return;}
+    btn.disabled=true;
+    if(authMode==='signup'){
+      const name=document.getElementById('authName').value.trim();
+      if(!name){note.textContent='ニックネームを入力してください';btn.disabled=false;return;}
+      if(!document.getElementById('authAgree').checked){note.textContent='利用規約とプライバシーポリシーへの同意が必要です';btn.disabled=false;return;}
+      const {data,error}=await supa.auth.signUp({email,password:pass});
+      if(error){note.textContent='登録できませんでした：'+error.message;btn.disabled=false;return;}
+      await supa.from('profiles').insert({id:data.user.id,name});
+      toast('登録できました！');await afterLogin();
+    }else{
+      const {error}=await supa.auth.signInWithPassword({email,password:pass});
+      if(error){note.textContent='ログインできませんでした：'+error.message;btn.disabled=false;return;}
+      await afterLogin();
+    }
+    btn.disabled=false;
+  }
+  async function signOut(){await supa.auth.signOut();me=null;myProfile=null;document.getElementById('appHeader').style.display='none';document.getElementById('navbar').style.display='none';go('auth');}
+  // 退会（アカウント削除）。DB側の delete_own_account 関数で本人のデータと認証情報をまとめて削除
+  async function deleteAccount(){
+    if(!confirm('本当に退会しますか？\n\nあなたのプロフィール・観戦予定・募集・トークなどがすべて削除され、元に戻せません。'))return;
+    if(!confirm('最終確認です。\nアカウントを完全に削除します。よろしいですか？'))return;
+    const {error}=await supa.rpc('delete_own_account');
+    if(error){toast('退会処理に失敗しました');console.error(error);return;}
+    await supa.auth.signOut();
+    alert('退会が完了しました。ご利用ありがとうございました。');
+    location.reload();
+  }
+  async function afterLogin(){
+    const {data:{user}}=await supa.auth.getUser();me=user;
+    const {data:prof}=await supa.from('profiles').select('*').eq('id',me.id).maybeSingle();
+    myProfile=prof||{id:me.id,name:'サポーター'};
+    await loadBlocks();
+    document.getElementById('welcome').textContent='こんにちは、'+myProfile.name+'さん';
+    document.getElementById('appHeader').style.display='flex';document.getElementById('navbar').style.display='flex';
+    go('home');loadMatches();
+  }
+  // ブロック中の相手IDを読み込む（各一覧の非表示判定に使う）
+  async function loadBlocks(){
+    const {data}=await supa.from('blocks').select('blocked_id').eq('blocker_id',me.id);
+    blockedIds=new Set((data||[]).map(b=>b.blocked_id));
+  }
+  async function loadMatches(){
+    const {data:matches,error}=await supa.from('matches').select('*').order('match_date');
+    if(error){document.getElementById('matchList').innerHTML='<div class="loading">読み込みに失敗しました</div>';console.error(error);return;}
+    const {data:atts}=await supa.from('attendances').select('match_id');
+    const counts={};(atts||[]).forEach(a=>{counts[a.match_id]=(counts[a.match_id]||0)+1;});
+    document.getElementById('matchList').innerHTML=matches.map(m=>matchCardHtml(m,counts[m.id]||0)).join('');
+    window._matches=matches;
+  }
+  function matchCardHtml(m,count){return '<div class="match '+(m.is_home?'home':'')+'" onclick="openDetail('+m.id+')"><div class="match-head"><div><div class="match-when">'+esc(matchWhen(m))+'</div></div><div class="badge '+(m.is_home?'h':'a')+'">'+(m.is_home?'HOME':'AWAY')+'</div></div><div class="vs"><div class="team us"><span>札幌</span></div><div class="x">VS</div><div class="team them"><span>'+esc(m.opponent)+'</span></div></div>'+(m.venue?'<div class="venue">◍ '+esc(m.venue)+'</div>':'')+(count!==null?'<div class="going"><div class="going-count"><b>'+count+'</b> <span>人が観戦予定</span></div><div class="going-cta">くわしく ›</div></div>':'')+'</div>';}
+
+  async function openDetail(id){
+    current=window._matches?window._matches.find(m=>m.id===id):null;
+    if(!current){const {data}=await supa.from('matches').select('*').eq('id',id).maybeSingle();current=data;}
+    document.getElementById('detailHero').innerHTML='<div class="when">'+esc(matchWhen(current))+'</div><div class="matchup"><div class="us"><span>札幌</span></div><div class="x">VS</div><div class="them"><span>'+esc(current.opponent)+'</span></div></div>'+(current.venue?'<div class="detail-venue">◍ '+esc(current.venue)+'</div>':'')+'';
+    go('detail');await Promise.all([loadGoers(),loadMeetups(),loadPosts()]);
+  }
+  async function loadGoers(){
+    const {data:raw,error}=await supa.from('attendances').select('*').eq('match_id',current.id).order('created_at');
+    if(error){console.error(error);return;}
+    const data=(raw||[]).filter(g=>!blockedIds.has(g.user_id));
+    document.getElementById('goCount').textContent=data.length;
+    const mine=data.find(g=>g.user_id===me.id);const btn=document.getElementById('joinBtn');
+    window._joined=!!mine;
+    if(mine){btn.classList.add('joined');btn.textContent='✓ 観戦予定（タップで解除）';}else{btn.classList.remove('joined');btn.textContent='＋ 観戦予定にする';}
+    if(data.length===0){document.getElementById('goerList').innerHTML='<div class="empty">まだ誰も登録していません。<br>最初の一人になりますか？</div>';}
+    else{await cacheAvatars(data.map(g=>g.user_id));document.getElementById('goerList').innerHTML=data.map(g=>'<div class="goer" onclick="openProfile(\''+g.user_id+'\',\'detail\')"><div class="av">'+avatarInner(g.user_name,avatarCache[g.user_id])+'</div><div><div class="goer-name">'+esc(g.user_name)+' '+(g.user_id===me.id?'<span class="me-tag">あなた</span>':'')+'</div>'+(g.comment?'<div class="goer-msg">'+esc(g.comment)+'</div>':'')+'</div></div>').join('');}
+  }
+  async function join(){
+    const comment=document.getElementById('joinComment').value.trim();
+    const {error}=await supa.from('attendances').insert({match_id:current.id,user_id:me.id,user_name:myProfile.name,comment});
+    if(error){toast('登録に失敗しました');console.error(error);return;}
+    document.getElementById('joinComment').value='';toast('観戦予定に追加しました！');loadGoers();
+  }
+  // 観戦予定ボタン：未登録なら登録、登録済みなら解除
+  function toggleJoin(){if(window._joined){cancelJoin();}else{join();}}
+  async function cancelJoin(){
+    if(!confirm('この試合の観戦予定を解除しますか？'))return;
+    const {error}=await supa.from('attendances').delete().eq('match_id',current.id).eq('user_id',me.id);
+    if(error){toast('解除に失敗しました');console.error(error);return;}
+    toast('観戦予定を解除しました');loadGoers();
+  }
+  async function loadPosts(){
+    const {data:raw,error}=await supa.from('posts').select('*').eq('match_id',current.id).order('created_at',{ascending:false});
+    if(error){console.error(error);return;}
+    const data=(raw||[]).filter(p=>!blockedIds.has(p.user_id));
+    document.getElementById('postCount').textContent=data.length;
+    if(data.length===0){document.getElementById('postList').innerHTML='<div class="empty">まだ書き込みがありません。<br>現地の様子やおすすめ情報を共有しましょう。</div>';}
+    else{
+      await cacheAvatars([...new Set(data.map(p=>p.user_id))]);
+      document.getElementById('postList').innerHTML=data.map(p=>'<div class="post"><div class="post-head"><div class="post-av" onclick="openProfile(\''+p.user_id+'\',\'detail\')">'+avatarInner(p.user_name,avatarCache[p.user_id])+'</div><div class="post-name" style="flex:1" onclick="openProfile(\''+p.user_id+'\',\'detail\')">'+esc(p.user_name)+' <span class="post-time">'+timeAgo(p.created_at)+'</span></div>'+(p.user_id===me.id?'<button class="text-link post-del" onclick="deletePost('+p.id+')">削除</button>':'')+'</div><div class="post-text">'+esc(p.body)+'</div></div>').join('');
+    }
+  }
+  async function post(){
+    const body=document.getElementById('postBody').value.trim();if(!body)return;
+    const {error}=await supa.from('posts').insert({match_id:current.id,user_id:me.id,user_name:myProfile.name,body});
+    if(error){toast('投稿に失敗しました');console.error(error);return;}
+    document.getElementById('postBody').value='';toast('投稿しました');loadPosts();
+  }
+
+  // ===== 募集 =====
+  async function loadMeetups(){
+    const {data,error}=await supa.from('meetups').select('*').eq('match_id',current.id).order('created_at',{ascending:false});
+    if(error){console.error(error);return;}
+    window._meetups=data;
+    document.getElementById('meetCount').textContent=data.length;
+    const ids=data.map(m=>m.id);
+    let joinsByMeet={};let myJoins={};
+    if(ids.length){
+      const {data:joins}=await supa.from('meetup_joins').select('*').in('meetup_id',ids);
+      (joins||[]).forEach(j=>{joinsByMeet[j.meetup_id]=(joinsByMeet[j.meetup_id]||0)+1;if(j.user_id===me.id)myJoins[j.meetup_id]=true;});
+    }
+    if(data.length===0){document.getElementById('meetList').innerHTML='<div class="empty">まだ募集がありません。<br>試合の前後に一緒にご飯・打ち上げする仲間を募集しませんか？</div>';return;}
+    await cacheAvatars(data.map(m=>m.host_id));
+    document.getElementById('meetList').innerHTML=data.map(m=>{
+      const filled=(joinsByMeet[m.id]||0)+1; // ホスト込みの現在人数
+      const applied=!!myJoins[m.id];
+      const isHost=m.host_id===me.id;
+      const full=filled>=m.capacity;
+      const slots=full
+        ?'<div class="meet-slots full">満員 ('+filled+'/'+m.capacity+')</div>'
+        :'<div class="meet-slots">あと <b>'+Math.max(0,m.capacity-filled)+'</b> 人 ('+filled+'/'+m.capacity+')</div>';
+      let action;
+      if(isHost){action='<span class="host-actions"><button class="apply-btn cancel" onclick="openEditMeetup('+m.id+')">編集</button><button class="apply-btn cancel" onclick="cancelMeetup('+m.id+')">取り消す</button></span>';}
+      else if(applied){action='<button class="apply-btn applied" onclick="toggleMeetJoin('+m.id+',true)">✓ 参加します</button>';}
+      else if(full){action='<span style="font-size:11px;color:#ff7088;font-weight:700">締め切り</span>';}
+      else{action='<button class="apply-btn" onclick="toggleMeetJoin('+m.id+',false)">参加する</button>';}
+      const groupBtn=isHost?'<button class="group-from-meet" onclick="groupFromMeetup('+m.id+')">💬 このメンバーでグループを作る</button>':'';
+      return '<div class="meet-card '+(isHost?'mine':'')+'"><div class="meet-top"><div class="av" onclick="openProfile(\''+m.host_id+'\',\'detail\')">'+avatarInner(m.host_name,avatarCache[m.host_id])+'</div><div class="meet-host">'+esc(m.host_name)+(isHost?' <span style="font-size:10px;color:var(--sub)">(あなた)</span>':'')+'</div><div class="meet-kind '+m.kind+'">'+(m.kind==='drink'?'🍺 飲み・打ち上げ':'🍚 ご飯')+'</div></div><div class="meet-title">'+esc(m.title)+'</div><div class="meet-meta">'+(m.place?'<div class="meet-chip">◍ '+esc(m.place)+'</div>':'')+(m.meet_time?'<div class="meet-chip">🕐 '+esc(m.meet_time)+'</div>':'')+'</div><div class="meet-foot">'+slots+action+'</div>'+groupBtn+'</div>';
+    }).join('');
+  }
+  // 募集の作成画面を開く（新規モード）
+  function openMeetModal(){
+    editingMeetupId=null;
+    document.getElementById('mkHeading').textContent='ご飯・打ち上げを募集';
+    document.getElementById('mkSubmitBtn').textContent='募集する';
+    document.getElementById('mkKind').value='drink';
+    document.getElementById('mkTitle').value='';
+    document.getElementById('mkPlace').value='';
+    document.getElementById('mkTime').value='';
+    document.getElementById('mkCap').value='4';
+    document.getElementById('meetModal').classList.add('show');
+  }
+  // 自分の募集を編集（既存の内容を入れて開く）
+  function openEditMeetup(id){
+    const m=(window._meetups||[]).find(x=>x.id===id);
+    if(!m)return;
+    editingMeetupId=id;
+    document.getElementById('mkHeading').textContent='募集を編集';
+    document.getElementById('mkSubmitBtn').textContent='保存する';
+    document.getElementById('mkKind').value=m.kind||'drink';
+    document.getElementById('mkTitle').value=m.title||'';
+    document.getElementById('mkPlace').value=m.place||'';
+    document.getElementById('mkTime').value=m.meet_time||'';
+    document.getElementById('mkCap').value=m.capacity||4;
+    document.getElementById('meetModal').classList.add('show');
+  }
+  function closeMeetModal(){document.getElementById('meetModal').classList.remove('show');}
+  // 「募集する／保存する」ボタンの共通処理（新規はinsert、編集はupdate）
+  async function submitMeetup(){
+    const title=document.getElementById('mkTitle').value.trim();
+    if(!title){toast('タイトルを入力してください');return;}
+    const fields={kind:document.getElementById('mkKind').value,title,place:document.getElementById('mkPlace').value.trim(),meet_time:document.getElementById('mkTime').value.trim(),capacity:parseInt(document.getElementById('mkCap').value)||4};
+    const btn=document.getElementById('mkSubmitBtn');btn.disabled=true;
+    let error;
+    if(editingMeetupId){
+      ({error}=await supa.from('meetups').update(fields).eq('id',editingMeetupId));
+    }else{
+      ({error}=await supa.from('meetups').insert({match_id:current.id,host_id:me.id,host_name:myProfile.name,...fields}));
+    }
+    btn.disabled=false;
+    if(error){toast(editingMeetupId?'保存に失敗しました':'募集の作成に失敗しました');console.error(error);return;}
+    closeMeetModal();
+    toast(editingMeetupId?'募集を更新しました！':'募集を作成しました！');
+    editingMeetupId=null;
+    loadMeetups();
+  }
+  async function toggleMeetJoin(meetupId,applied){
+    if(applied){await supa.from('meetup_joins').delete().eq('meetup_id',meetupId).eq('user_id',me.id);toast('参加を取り消しました');}
+    else{const {error}=await supa.from('meetup_joins').insert({meetup_id:meetupId,user_id:me.id,user_name:myProfile.name});if(error){toast('参加に失敗しました');console.error(error);return;}toast('参加表明しました！');}
+    loadMeetups();
+  }
+  // 自分の募集を取り消す（参加者データもDB側で自動削除される設定）
+  async function cancelMeetup(meetupId){
+    if(!confirm('この募集を取り消しますか？\n参加者の情報も消えます。元に戻せません。'))return;
+    const {error}=await supa.from('meetups').delete().eq('id',meetupId);
+    if(error){toast('取り消しに失敗しました');console.error(error);return;}
+    toast('募集を取り消しました');loadMeetups();
+  }
+  // 募集メンバー（ホスト＋参加者）でグループトークを作る
+  async function groupFromMeetup(meetupId){
+    const m=(window._meetups||[]).find(x=>x.id===meetupId);
+    if(!m)return;
+    const {data:joins}=await supa.from('meetup_joins').select('user_id').eq('meetup_id',meetupId);
+    const uniq=[...new Set([me.id, ...(joins||[]).map(j=>j.user_id)])];
+    if(uniq.length<2){toast('まだ参加者がいません。集まってからグループを作れます。');return;}
+    const {data:g,error}=await supa.from('groups').insert({name:m.title,owner_id:me.id}).select().single();
+    if(error){toast('グループ作成に失敗しました');console.error(error);return;}
+    const {error:memErr}=await supa.from('group_members').insert(uniq.map(uid=>({group_id:g.id,user_id:uid})));
+    if(memErr){toast('メンバー追加に失敗しました');console.error(memErr);return;}
+    toast('募集メンバーでグループを作りました！');
+    openGroupChat(g.id);
+  }
+
+  // ===== マイページ =====
+  async function openMypage(){
+    document.getElementById('mypageAv').innerHTML=avatarInner(myProfile.name,myProfile.avatar_url);
+    document.getElementById('mypageName').textContent=myProfile.name;
+    // 自己紹介・観戦エリア等の表示
+    let mp='';
+    if(myProfile.style)mp+='<div style="padding:2px 20px 0"><span class="prof-style">'+esc(myProfile.style)+'</span></div>';
+    if(myProfile.bio)mp+='<div class="prof-bio" style="text-align:left;margin:10px 20px 0">'+esc(myProfile.bio)+'</div>';
+    mp+=profDetailHtml(myProfile);
+    document.getElementById('myProfDetail').innerHTML=mp;
+    go('mypage');
+    // フォロー数
+    const {data:fing}=await supa.from('follows').select('id').eq('follower_id',me.id);
+    const {data:fers}=await supa.from('follows').select('id').eq('following_id',me.id);
+    document.getElementById('mpFollowing').textContent=(fing||[]).length;
+    document.getElementById('mpFollowers').textContent=(fers||[]).length;
+    // 自分の観戦（予定＝これからの試合／実績＝終わった試合）
+    const box=document.getElementById('myMatchList');box.innerHTML='<div class="loading">読み込み中…</div>';
+    const recBox=document.getElementById('myRecordList');recBox.innerHTML='<div class="loading">読み込み中…</div>';
+    const {data:atts}=await supa.from('attendances').select('match_id,attended').eq('user_id',me.id);
+    const attMap={};(atts||[]).forEach(a=>attMap[a.match_id]=a);
+    const ids=(atts||[]).map(a=>a.match_id);
+    let ms=[];if(ids.length){const {data}=await supa.from('matches').select('*').in('id',ids);ms=data||[];}
+    const future=ms.filter(m=>!isPastMatch(m)).sort((a,b)=>new Date(a.match_date)-new Date(b.match_date));
+    const past=ms.filter(isPastMatch).sort((a,b)=>new Date(b.match_date)-new Date(a.match_date));
+    document.getElementById('mypageStat').textContent='観戦予定 '+future.length+'件';
+    if(future.length===0){box.innerHTML='<div class="empty">まだ観戦予定がありません。<br>試合一覧から「観戦予定にする」を押すと、ここに並びます。</div>';}
+    else{box.innerHTML=future.map(m=>matchCardHtml(m,null)).join('');}
+    // 観戦実績はシーズンごとに集計（直近シーズンを表示）
+    window._recPast=past;window._recAttMap=attMap;renderRecords();
+    // フォロー中の仲間の観戦フィード
+    loadFollowFeed(fing||[]);
+  }
+  // 観戦実績の1行（過去の試合。観戦した/しなかったを手動で切替できる）
+  function recordRowHtml(m,att){
+    const went=didAttend(att);
+    return '<div class="rec'+(went?'':' skip')+'">'
+      +'<div class="rec-main"><div class="rec-when">'+esc(matchWhen(m))+'</div><div class="rec-vs">札幌 vs '+esc(m.opponent)+'</div></div>'
+      +'<div class="rec-right"><div class="rec-status">'+(went?'<span class="rec-on">✓ 観戦した</span>':'<span class="rec-off">観戦しなかった</span>')+'</div>'
+      +'<button class="rec-toggle" onclick="setAttended('+m.id+','+(went?'false':'true')+')">'+(went?'観戦しなかったに変更':'観戦したに戻す')+'</button></div>'
+    +'</div>';
+  }
+  // 観戦実績をシーズンごとに描画（直近シーズンを既定表示。複数あればタブで切替）
+  function renderRecords(){
+    const recBox=document.getElementById('myRecordList');
+    const past=window._recPast||[];const attMap=window._recAttMap||{};
+    const seasons=[...new Set(past.map(seasonOf).filter(Boolean))].sort().reverse();
+    if(seasons.length===0){recBox.innerHTML='<div class="empty">まだ観戦実績がありません。<br>観戦予定にした試合が終わると、ここに自動で並びます。</div>';return;}
+    let sel=window._recSeason;if(!sel||!seasons.includes(sel)){sel=seasons[0];window._recSeason=sel;}
+    let tabs='';
+    if(seasons.length>1){tabs='<div class="season-tabs">'+seasons.map(s=>'<button class="season-tab'+(s===sel?' on':'')+'" onclick="selectRecordSeason(\''+s+'\')">'+s+'</button>').join('')+'</div>';}
+    const list=past.filter(m=>seasonOf(m)===sel);
+    const cnt=list.filter(m=>didAttend(attMap[m.id])).length;
+    const head='<div class="season-head"><div class="season-name">'+seasonLabel(sel)+'</div><div class="season-cnt">観戦 <b>'+cnt+'</b>試合</div></div>';
+    recBox.innerHTML=tabs+head+list.map(m=>recordRowHtml(m,attMap[m.id])).join('');
+  }
+  function selectRecordSeason(s){window._recSeason=s;renderRecords();}
+  // 観戦実績の手動修正：その試合を「観戦した(true)／観戦しなかった(false)」で保存
+  async function setAttended(matchId,value){
+    const {error}=await supa.from('attendances').update({attended:value}).eq('user_id',me.id).eq('match_id',matchId);
+    if(error){toast('変更に失敗しました');console.error(error);return;}
+    toast(value?'「観戦した」にしました':'「観戦しなかった」にしました');
+    openMypage();
+  }
+  async function loadFollowFeed(following){
+    const box=document.getElementById('followFeed');
+    if(following.length===0){box.innerHTML='<div class="empty">まだ誰もフォローしていません。<br>参加者やプロフィールから「フォロー」すると、その人の観戦予定がここに出ます。</div>';return;}
+    const ids=(await supa.from('follows').select('following_id').eq('follower_id',me.id)).data.map(f=>f.following_id);
+    const {data:atts}=await supa.from('attendances').select('*').in('user_id',ids).order('created_at',{ascending:false});
+    if(!atts||atts.length===0){box.innerHTML='<div class="empty">フォロー中の仲間は、まだ観戦予定を登録していません。</div>';return;}
+    const mids=[...new Set(atts.map(a=>a.match_id))];
+    const {data:ms}=await supa.from('matches').select('*').in('id',mids);
+    const mmap={};(ms||[]).forEach(m=>mmap[m.id]=m);
+    // これからの試合（観戦予定）だけを表示する
+    const feed=atts.filter(a=>{const m=mmap[a.match_id];return m&&!isPastMatch(m);});
+    if(feed.length===0){box.innerHTML='<div class="empty">フォロー中の仲間は、まだこれからの観戦予定を登録していません。</div>';return;}
+    box.innerHTML=feed.slice(0,20).map(a=>{const m=mmap[a.match_id];return '<div class="goer" onclick="openDetail('+m.id+')"><div class="av">'+ini(a.user_name)+'</div><div><div class="goer-name">'+esc(a.user_name)+'</div><div class="goer-msg">'+esc(matchWhen(m))+' 札幌 vs '+esc(m.opponent)+' を観戦予定</div></div></div>';}).join('');
+  }
+
+  // ===== プロフィール & フォロー =====
+  async function openProfile(uid,from){
+    profFrom=from||'detail';
+    if(uid===me.id){ openMypage(); return; }
+    const {data:prof}=await supa.from('profiles').select('*').eq('id',uid).maybeSingle();
+    profUser=prof||{id:uid,name:'サポーター'};
+    const {data:fers}=await supa.from('follows').select('id').eq('following_id',uid);
+    const {data:fing}=await supa.from('follows').select('id').eq('follower_id',uid);
+    const {data:mine}=await supa.from('follows').select('id').eq('follower_id',me.id).eq('following_id',uid).maybeSingle();
+    document.getElementById('profHero').innerHTML='<div class="prof-av">'+avatarInner(profUser.name,profUser.avatar_url)+'</div><div class="prof-name">'+esc(profUser.name)+'</div>'+(profUser.style?'<div><span class="prof-style">'+esc(profUser.style)+'</span></div>':'')+(profUser.bio?'<div class="prof-bio">'+esc(profUser.bio)+'</div>':'')+'<div class="prof-follow-row"><div class="pfr"><b>'+(fing||[]).length+'</b>フォロー</div><div class="pfr"><b>'+(fers||[]).length+'</b>フォロワー</div></div>';
+    const btn=document.getElementById('profFollowBtn');
+    profUser._following=!!mine;
+    if(mine){btn.classList.add('joined');btn.textContent='✓ フォロー中';}else{btn.classList.remove('joined');btn.textContent='＋ フォロー';}
+    document.getElementById('profDetail').innerHTML=profDetailHtml(profUser);
+    // ブロック状態に応じて、メッセージ可否と安全操作を切り替え
+    const isBlocked=blockedIds.has(profUser.id);
+    document.getElementById('profMsgBtn').style.display=isBlocked?'none':'';
+    document.getElementById('profSafety').innerHTML=
+      (isBlocked?'<div class="blocked-note">この人をブロック中です。メッセージは届かず、投稿も表示されません。</div>':'')
+      +'<button class="text-link" onclick="reportUser(\''+profUser.id+'\')">通報する</button>'
+      +'<button class="text-link" onclick="toggleBlock(\''+profUser.id+'\')">'+(isBlocked?'ブロックを解除':'ブロックする')+'</button>';
+    // その人の観戦（予定＝これから／実績＝終わった試合）＋ 自分との共通点
+    const {data:atts}=await supa.from('attendances').select('match_id,attended').eq('user_id',uid);
+    const {data:myAtts}=await supa.from('attendances').select('match_id').eq('user_id',me.id);
+    const theirIds=(atts||[]).map(a=>a.match_id);
+    const theirAttMap={};(atts||[]).forEach(a=>theirAttMap[a.match_id]=a);
+    const myIds=new Set((myAtts||[]).map(a=>a.match_id));
+    // 相手の試合情報をまとめて取得（一覧と共通点で使い回す）
+    let tmatches=[];
+    if(theirIds.length){const {data:ms}=await supa.from('matches').select('*').in('id',theirIds);tmatches=ms||[];}
+    const theirFuture=tmatches.filter(m=>!isPastMatch(m)).sort((a,b)=>new Date(a.match_date)-new Date(b.match_date));
+    const theirPast=tmatches.filter(isPastMatch);
+    const theirSeasons=[...new Set(theirPast.map(seasonOf).filter(Boolean))].sort().reverse();
+    const theirSeason=theirSeasons[0]||null;
+    const theirRecord=theirPast.filter(m=>seasonOf(m)===theirSeason&&didAttend(theirAttMap[m.id])).length;
+    const commonMatches=theirFuture.filter(m=>myIds.has(m.id));
+    document.getElementById('profCommon').innerHTML=commonHtml(commonMatches, theirFuture.length, theirRecord, theirSeason);
+    const pml=document.getElementById('profMatchList');
+    if(theirFuture.length===0){pml.innerHTML='<div class="empty">まだ観戦予定がありません。</div>';}
+    else{pml.innerHTML=theirFuture.map(m=>matchCardHtml(m,null)).join('');}
+    go('profile');
+  }
+  // 自分と相手の「共通点」カードを組み立てる（入力不要・観戦データから自動計算）
+  function commonHtml(commonMatches, theirCount, theirRecord, theirSeason){
+    const parts=[];
+    if(commonMatches.length){
+      parts.push('<div class="common-line"><span class="cl-ico">🔴</span><div style="flex:1"><div class="cl-title">二人とも観戦予定の試合 '+commonMatches.length+'件</div>'+commonMatches.map(m=>'<div class="cl-match" onclick="openDetail('+m.id+')">'+esc(matchWhen(m))+' 札幌 vs '+esc(m.opponent)+' ›</div>').join('')+'</div></div>');
+    }
+    const chips=[];
+    if(profUser.watch_area&&myProfile.watch_area&&profUser.watch_area===myProfile.watch_area)chips.push('観戦エリアが同じ（'+esc(profUser.watch_area)+'）');
+    if(profUser.home_area&&myProfile.home_area&&profUser.home_area===myProfile.home_area)chips.push('出発地が同じ（'+esc(profUser.home_area)+'）');
+    if(chips.length)parts.push('<div class="common-chips">'+chips.map(c=>'<span class="meet-chip">✓ '+c+'</span>').join('')+'</div>');
+    const recLabel=theirSeason?'（'+theirSeason+'）':'';
+    const stat='<div class="common-stat">🎫 '+esc(profUser.name)+'さんの観戦実績'+recLabel+' <b>'+(theirRecord||0)+'</b>試合 ・ 観戦予定 <b>'+theirCount+'</b>試合</div>';
+    if(parts.length===0){
+      return '<div class="common-card"><div class="common-head">共通点</div><div class="common-none">まだ共通点はありません。同じ試合で「観戦予定にする」を押すと、ここに共通の観戦予定が出ます。</div>'+stat+'</div>';
+    }
+    return '<div class="common-card"><div class="common-head">共通点</div>'+parts.join('')+stat+'</div>';
+  }
+  function backFromProfile(){
+    if(profFrom==='mypage')openMypage();
+    else if(profFrom==='chat')go('chat');
+    else if(profFrom==='groupChat')go('groupChat');
+    else go('detail');
+  }
+  async function toggleFollowCurrent(){
+    if(!profUser)return;
+    if(profUser._following){
+      await supa.from('follows').delete().eq('follower_id',me.id).eq('following_id',profUser.id);
+      profUser._following=false;toast('フォローを解除しました');
+    }else{
+      const {error}=await supa.from('follows').insert({follower_id:me.id,following_id:profUser.id});
+      if(error){toast('フォローに失敗しました');console.error(error);return;}
+      profUser._following=true;toast(profUser.name+'さんをフォローしました');
+    }
+    const btn=document.getElementById('profFollowBtn');
+    if(profUser._following){btn.classList.add('joined');btn.textContent='✓ フォロー中';}else{btn.classList.remove('joined');btn.textContent='＋ フォロー';}
+  }
+
+  // ===== プロフィール詳細 & 編集 =====
+  // 観戦エリア等の項目を「キー：値」の表で表示（空の項目は出さない）
+  function profDetailHtml(p){
+    const rows=[];
+    if(p.watch_area)rows.push(['観戦エリア',p.watch_area]);
+    if(p.home_area)rows.push(['出発地',p.home_area]);
+    if(p.fav_player)rows.push(['推し選手',p.fav_player]);
+    if(p.years)rows.push(['応援歴',p.years]);
+    if(rows.length===0)return'';
+    return '<div class="prof-detail">'+rows.map(r=>'<div class="pd-row"><span class="pd-k">'+r[0]+'</span><span class="pd-v">'+esc(r[1])+'</span></div>').join('')+'</div>';
+  }
+  function openEditProfile(){
+    document.getElementById('epName').value=myProfile.name||'';
+    document.getElementById('epStyle').value=myProfile.style||'';
+    document.getElementById('epWatch').value=myProfile.watch_area||'';
+    document.getElementById('epHome').value=myProfile.home_area||'';
+    document.getElementById('epPlayer').value=myProfile.fav_player||'';
+    document.getElementById('epYears').value=myProfile.years||'';
+    document.getElementById('epBio').value=myProfile.bio||'';
+    go('editProfile');
+  }
+  async function saveProfile(){
+    const name=document.getElementById('epName').value.trim();
+    if(!name){toast('ニックネームを入れてください');return;}
+    const upd={
+      name,
+      style:document.getElementById('epStyle').value.trim(),
+      watch_area:document.getElementById('epWatch').value,
+      home_area:document.getElementById('epHome').value,
+      fav_player:document.getElementById('epPlayer').value.trim(),
+      years:document.getElementById('epYears').value.trim(),
+      bio:document.getElementById('epBio').value.trim()
+    };
+    const btn=document.getElementById('epSaveBtn');btn.disabled=true;
+    const {error}=await supa.from('profiles').update(upd).eq('id',me.id);
+    btn.disabled=false;
+    if(error){toast('保存に失敗しました');console.error(error);return;}
+    Object.assign(myProfile,upd);
+    document.getElementById('welcome').textContent='こんにちは、'+myProfile.name+'さん';
+    toast('プロフィールを保存しました！');
+    openMypage();
+  }
+
+  // ===== 1対1トーク =====
+  // プロフィール画面の「メッセージ」ボタンから呼ばれる
+  // ブロック切替（する／解除）
+  async function toggleBlock(uid){
+    if(blockedIds.has(uid)){
+      const {error}=await supa.from('blocks').delete().eq('blocker_id',me.id).eq('blocked_id',uid);
+      if(error){toast('解除に失敗しました');console.error(error);return;}
+      blockedIds.delete(uid);toast('ブロックを解除しました');
+    }else{
+      if(!confirm('この人をブロックしますか？\n相手はあなたにメッセージを送れなくなり、相手の投稿・メッセージはあなたに表示されなくなります。'))return;
+      const {error}=await supa.from('blocks').insert({blocker_id:me.id,blocked_id:uid});
+      if(error){toast('ブロックに失敗しました');console.error(error);return;}
+      blockedIds.add(uid);toast('ブロックしました');
+    }
+    openProfile(uid,profFrom); // 表示を更新
+  }
+  // 運営への通報
+  async function reportUser(uid){
+    if(!confirm('この人を運営に通報しますか？\n迷惑行為や不適切な内容がないか運営が確認します。'))return;
+    const {error}=await supa.from('reports').insert({reporter_id:me.id,reported_user_id:uid,kind:'user',detail:'プロフィールから通報'});
+    if(error){toast('通報に失敗しました');console.error(error);return;}
+    toast('通報を受け付けました。ご協力ありがとうございます。');
+  }
+  // 自分の投稿/メッセージの削除
+  async function deletePost(id){
+    if(!confirm('この書き込みを削除しますか？'))return;
+    const {error}=await supa.from('posts').delete().eq('id',id);
+    if(error){toast('削除に失敗しました');console.error(error);return;}
+    toast('削除しました');loadPosts();
+  }
+  async function deleteMessage(id){
+    if(!confirm('このメッセージを削除しますか？'))return;
+    const {error}=await supa.from('messages').delete().eq('id',id);
+    if(error){toast('削除に失敗しました');console.error(error);return;}
+    loadMessages();
+  }
+  async function deleteGroupMessage(id){
+    if(!confirm('このメッセージを削除しますか？'))return;
+    const {error}=await supa.from('group_messages').delete().eq('id',id);
+    if(error){toast('削除に失敗しました');console.error(error);return;}
+    loadGroupMessages();
+  }
+  // ブロックした人の管理画面
+  async function openBlocked(){ go('blocked'); await loadBlockedList(); }
+  async function loadBlockedList(){
+    const box=document.getElementById('blockedList');
+    await loadBlocks(); // 最新化
+    const ids=[...blockedIds];
+    if(ids.length===0){box.innerHTML='<div class="empty">ブロックした人はいません。</div>';return;}
+    const {data:profs}=await supa.from('profiles').select('id,name,avatar_url').in('id',ids);
+    const pmap={};(profs||[]).forEach(p=>pmap[p.id]=p);
+    box.innerHTML=ids.map(uid=>{const p=pmap[uid]||{};const nm=p.name||'サポーター';
+      return '<div class="goer"><div class="av">'+avatarInner(nm,p.avatar_url)+'</div><div style="flex:1;min-width:0"><div class="goer-name">'+esc(nm)+'</div></div><button class="apply-btn cancel" onclick="unblockFromList(\''+uid+'\')">解除</button></div>';
+    }).join('');
+  }
+  async function unblockFromList(uid){
+    const {error}=await supa.from('blocks').delete().eq('blocker_id',me.id).eq('blocked_id',uid);
+    if(error){toast('解除に失敗しました');console.error(error);return;}
+    blockedIds.delete(uid);toast('ブロックを解除しました');
+    loadBlockedList();
+  }
+  function openChatFromProfile(){
+    if(!profUser)return;
+    openChat(profUser.id, profUser.name, profUser.avatar_url, 'profile');
+  }
+  async function openChat(uid,name,avatarUrl,from){
+    if(uid===me.id)return; // 自分とはトークしない
+    chatFrom=from||'profile';
+    chatWith={id:uid, name:name||'サポーター', avatar_url:avatarUrl};
+    // 名前やアイコンが渡されていなければprofilesから取得
+    if(!name||avatarUrl===undefined){
+      const {data:pr}=await supa.from('profiles').select('name,avatar_url').eq('id',uid).maybeSingle();
+      if(pr){ if(!name)chatWith.name=pr.name||'サポーター'; if(avatarUrl===undefined)chatWith.avatar_url=pr.avatar_url; }
+    }
+    document.getElementById('chatPeer').innerHTML='<div class="av" style="cursor:pointer" onclick="openProfile(\''+chatWith.id+'\',\'chat\')">'+avatarInner(chatWith.name,chatWith.avatar_url)+'</div><div class="nm" style="cursor:pointer" onclick="openProfile(\''+chatWith.id+'\',\'chat\')">'+esc(chatWith.name)+'</div>';
+    go('chat');
+    await loadMessages();
+    document.getElementById('chatInput').focus();
+  }
+  async function loadMessages(){
+    const box=document.getElementById('chatScroll');
+    // RLSで「自分が関係するメッセージ」しか取れないので、相手が絡む行＝この2人の会話
+    const {data,error}=await supa.from('messages')
+      .select('*')
+      .or('sender_id.eq.'+chatWith.id+',receiver_id.eq.'+chatWith.id)
+      .order('created_at');
+    if(error){box.innerHTML='<div class="loading">読み込みに失敗しました</div>';console.error(error);return;}
+    if(!data||data.length===0){box.innerHTML='<div class="empty" style="margin:auto">まだメッセージはありません。<br>最初のひとことを送ってみましょう。</div>';return;}
+    box.innerHTML=data.map(m=>{
+      const mine=m.sender_id===me.id;
+      const del=mine?'<span class="msg-del" onclick="deleteMessage('+m.id+')">削除</span>':'';
+      return '<div class="msg '+(mine?'me':'them')+'">'+esc(m.body)+'<span class="t">'+timeAgo(m.created_at)+'</span>'+del+'</div>';
+    }).join('');
+    box.scrollTop=box.scrollHeight; // 一番下（最新）まで自動スクロール
+  }
+  async function sendMessage(){
+    const input=document.getElementById('chatInput');
+    const body=input.value.trim();
+    if(!body||!chatWith)return;
+    const btn=document.getElementById('chatSendBtn');btn.disabled=true;
+    const {error}=await supa.from('messages').insert({sender_id:me.id, receiver_id:chatWith.id, sender_name:myProfile.name, body});
+    btn.disabled=false;
+    if(error){toast('送信に失敗しました');console.error(error);return;}
+    input.value='';
+    await loadMessages();
+    input.focus();
+  }
+  function backFromChat(){ if(chatFrom==='talk')go('talk');else go('profile'); } // 来た画面に戻る
+
+  // ===== トークタブ（1対1の履歴 ＋ グループ） =====
+  async function openTalk(){ go('talk'); await Promise.all([loadDMList(), loadGroups()]); }
+  async function loadDMList(){
+    const box=document.getElementById('dmList');
+    // RLSで「自分が関係するメッセージ」だけ返る。新しい順に取り、相手ごとに最新1件だけ拾う
+    const {data:msgs,error}=await supa.from('messages').select('*').order('created_at',{ascending:false});
+    if(error){box.innerHTML='<div class="loading">読み込みに失敗しました</div>';console.error(error);return;}
+    const latest={}; const order=[];
+    (msgs||[]).forEach(m=>{
+      const other=m.sender_id===me.id?m.receiver_id:m.sender_id;
+      if(blockedIds.has(other))return; // ブロック中は表示しない
+      if(!latest[other]){ latest[other]=m; order.push(other); } // 新しい順なので最初に来た＝最新
+    });
+    if(order.length===0){box.innerHTML='<div class="empty">まだ誰ともトークしていません。<br>参加者やプロフィールの「💬 メッセージ」から始められます。</div>';return;}
+    // 相手の名前・アイコンは最新のものをprofilesから取る
+    const {data:profs}=await supa.from('profiles').select('id,name,avatar_url').in('id',order);
+    const pmap={};(profs||[]).forEach(p=>pmap[p.id]=p);
+    box.innerHTML=order.map(uid=>{
+      const m=latest[uid]; const p=pmap[uid]||{}; const nm=p.name||'サポーター';
+      const mine=m.sender_id===me.id;
+      const preview=(mine?'あなた：':'')+m.body;
+      return '<div class="goer" onclick="openChat(\''+uid+'\',null,undefined,\'talk\')"><div class="av">'+avatarInner(nm,p.avatar_url)+'</div><div style="flex:1;min-width:0"><div class="goer-name">'+esc(nm)+' <span class="post-time">'+timeAgo(m.created_at)+'</span></div><div class="goer-msg" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(preview)+'</div></div></div>';
+    }).join('');
+  }
+
+  // ===== グループトーク =====
+  async function loadGroups(){
+    const box=document.getElementById('groupList');
+    // RLSで「自分がメンバー or オーナー」のグループしか返らない
+    const {data,error}=await supa.from('groups').select('*').order('created_at',{ascending:false});
+    if(error){box.innerHTML='<div class="loading">読み込みに失敗しました</div>';console.error(error);return;}
+    window._groups=data||[];
+    if(!data||data.length===0){box.innerHTML='<div class="empty">まだグループがありません。<br>下のボタンから、フォロー中の仲間とグループを作れます。</div>';return;}
+    // メンバー数を数える
+    const ids=data.map(g=>g.id);
+    const {data:mems}=await supa.from('group_members').select('group_id').in('group_id',ids);
+    const cnt={};(mems||[]).forEach(m=>{cnt[m.group_id]=(cnt[m.group_id]||0)+1;});
+    box.innerHTML=data.map(g=>'<div class="group-card" onclick="openGroupChat('+g.id+')"><div class="gc-icon">💬</div><div><div class="group-name">'+esc(g.name)+'</div><div class="group-sub">メンバー '+(cnt[g.id]||1)+'人'+(g.owner_id===me.id?' ・ あなたが作成':'')+'</div></div></div>').join('');
+  }
+  // --- グループ作成 ---
+  async function openCreateGroup(){
+    document.getElementById('grName').value='';
+    const box=document.getElementById('grMembers');
+    box.innerHTML='<div class="loading">読み込み中…</div>';
+    document.getElementById('groupModal').classList.add('show');
+    const {data:fol}=await supa.from('follows').select('following_id').eq('follower_id',me.id);
+    const ids=(fol||[]).map(f=>f.following_id);
+    if(ids.length===0){box.innerHTML='<div class="empty">フォロー中の仲間がいません。<br>試合の参加者やプロフィールからフォローすると、ここから選べます。</div>';return;}
+    const {data:profs}=await supa.from('profiles').select('id,name,avatar_url').in('id',ids);
+    box.innerHTML=(profs||[]).map(p=>'<div class="member-row" data-uid="'+p.id+'" onclick="this.classList.toggle(\'sel\')"><div class="av">'+avatarInner(p.name,p.avatar_url)+'</div><div class="mn">'+esc(p.name)+'</div><div class="chk">✓</div></div>').join('');
+  }
+  function closeCreateGroup(){ document.getElementById('groupModal').classList.remove('show'); }
+  async function createGroup(){
+    const name=document.getElementById('grName').value.trim();
+    if(!name){toast('グループ名を入れてください');return;}
+    const picked=[...document.querySelectorAll('#grMembers .member-row.sel')].map(el=>el.dataset.uid);
+    // ① グループ本体を作る（作った自分がオーナー）
+    const {data:g,error}=await supa.from('groups').insert({name,owner_id:me.id}).select().single();
+    if(error){toast('グループ作成に失敗しました');console.error(error);return;}
+    // ② メンバーを入れる（自分＋選んだ人）。自分も入れないとトークが読めません
+    const rows=[{group_id:g.id,user_id:me.id},...picked.map(uid=>({group_id:g.id,user_id:uid}))];
+    const {error:memErr}=await supa.from('group_members').insert(rows);
+    if(memErr){toast('メンバー追加に失敗しました');console.error(memErr);return;}
+    closeCreateGroup();
+    toast('グループを作りました！');
+    await loadGroups();
+    openGroupChat(g.id);
+  }
+  // --- グループチャット ---
+  async function openGroupChat(gid){
+    let g=(window._groups||[]).find(x=>x.id===gid);
+    if(!g){const {data}=await supa.from('groups').select('*').eq('id',gid).maybeSingle();g=data;}
+    if(!g)return;
+    groupWith={id:g.id, name:g.name};
+    const {data:mems}=await supa.from('group_members').select('user_id').eq('group_id',gid);
+    const n=(mems||[]).length;
+    document.getElementById('groupChatPeer').innerHTML='<div class="av">💬</div><div><div class="nm">'+esc(g.name)+'</div><div style="font-size:11px;color:var(--sub)">メンバー '+n+'人</div></div>';
+    go('groupChat');
+    await loadGroupMessages();
+    document.getElementById('groupChatInput').focus();
+  }
+  async function loadGroupMessages(){
+    const box=document.getElementById('groupChatScroll');
+    const {data:raw,error}=await supa.from('group_messages').select('*').eq('group_id',groupWith.id).order('created_at');
+    if(error){box.innerHTML='<div class="loading">読み込みに失敗しました</div>';console.error(error);return;}
+    const data=(raw||[]).filter(m=>!blockedIds.has(m.sender_id));
+    if(!data||data.length===0){box.innerHTML='<div class="empty" style="margin:auto">まだメッセージはありません。<br>最初のひとことを送ってみましょう。</div>';return;}
+    // 相手のアイコンをまとめて取得
+    const others=[...new Set(data.filter(m=>m.sender_id!==me.id).map(m=>m.sender_id))];
+    await cacheAvatars(others);
+    box.innerHTML=data.map(m=>{
+      const mine=m.sender_id===me.id;
+      if(mine)return '<div class="msg me">'+esc(m.body)+'<span class="t">'+timeAgo(m.created_at)+'</span><span class="msg-del" onclick="deleteGroupMessage('+m.id+')">削除</span></div>';
+      // 相手のメッセージ：アイコン＋名前（どちらもタップでプロフィールへ）
+      const av='<div class="msg-av" onclick="openProfile(\''+m.sender_id+'\',\'groupChat\')">'+avatarInner(m.sender_name,avatarCache[m.sender_id])+'</div>';
+      const bubble='<div class="msg them"><span class="who" style="cursor:pointer" onclick="openProfile(\''+m.sender_id+'\',\'groupChat\')">'+esc(m.sender_name||'サポーター')+'</span>'+esc(m.body)+'<span class="t">'+timeAgo(m.created_at)+'</span></div>';
+      return '<div class="msg-row">'+av+bubble+'</div>';
+    }).join('');
+    box.scrollTop=box.scrollHeight;
+  }
+  async function sendGroupMessage(){
+    const input=document.getElementById('groupChatInput');
+    const body=input.value.trim();
+    if(!body||!groupWith)return;
+    const btn=document.getElementById('groupChatSendBtn');btn.disabled=true;
+    const {error}=await supa.from('group_messages').insert({group_id:groupWith.id, sender_id:me.id, sender_name:myProfile.name, body});
+    btn.disabled=false;
+    if(error){toast('送信に失敗しました');console.error(error);return;}
+    input.value='';
+    await loadGroupMessages();
+    input.focus();
+  }
+
+  // ===== アイコン画像アップロード =====
+  async function uploadAvatar(e){
+    const file=e.target.files[0];
+    if(!file)return;
+    if(file.size>5*1024*1024){toast('画像は5MBまでにしてください');return;}
+    toast('アップロード中…');
+    // 拡張子を取り出し、自分のIDをファイル名にする（差し替え可能なようupsert）
+    const ext=(file.name.split('.').pop()||'png').toLowerCase();
+    const path=me.id+'.'+ext;
+    const {error:upErr}=await supa.storage.from('avatars').upload(path,file,{upsert:true});
+    if(upErr){toast('アップロードに失敗しました');console.error(upErr);return;}
+    // 公開URLを取得（キャッシュ避けに時刻を付ける）
+    const {data:pub}=supa.storage.from('avatars').getPublicUrl(path);
+    const url=pub.publicUrl+'?t='+Date.now();
+    // プロフィールに保存
+    const {error:dbErr}=await supa.from('profiles').update({avatar_url:url}).eq('id',me.id);
+    if(dbErr){toast('保存に失敗しました');console.error(dbErr);return;}
+    myProfile.avatar_url=url;
+    avatarCache[me.id]=url;
+    document.getElementById('mypageAv').innerHTML=avatarInner(myProfile.name,url);
+    toast('アイコンを変更しました！');
+  }
+
+  async function start(){
+    if(typeof SUPABASE_URL==='undefined'||typeof SUPABASE_KEY==='undefined'||SUPABASE_URL.indexOf('ここに')>=0||SUPABASE_KEY.indexOf('ここに')>=0){document.getElementById('auth').innerHTML='<div class="config-warn">⚙️ 設定がまだです<br><br>このindex.htmlと同じフォルダに <b>config.js</b> を置き、その中の SUPABASE_URL と SUPABASE_KEY に、あなたのSupabaseの情報を入れて保存してください。</div>';return;}
+    supa=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+    setMode('login');
+    const {data:{session}}=await supa.auth.getSession();
+    if(session){await afterLogin();}
+  }
+  start();
+</script>
+</body>
+</html>
