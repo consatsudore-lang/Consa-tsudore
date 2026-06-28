@@ -146,6 +146,11 @@
   .auth-note{font-size:11px;color:var(--sub);text-align:center;margin-top:14px;line-height:1.6}
   .nameField{display:none}
   .nameField.show{display:block}
+  .forgot-row{text-align:center;margin-top:10px;display:none}
+  .forgot-row.show{display:block}
+  .reset-overlay{position:absolute;inset:0;background:var(--bg);z-index:60;display:flex;align-items:center;justify-content:center;padding:24px;overflow:auto}
+  .reset-title{font-size:18px;font-weight:900;color:var(--snow);text-align:center}
+  .reset-desc{font-size:12px;color:var(--sub);text-align:center;margin:8px 2px 4px;line-height:1.6}
   .mypage-head{display:flex;align-items:center;gap:14px;padding:20px}
   .mypage-av{width:54px;height:54px;border-radius:50%;background:linear-gradient(135deg,var(--red),var(--red-deep));display:grid;place-items:center;font-size:22px;font-weight:900;color:#fff;flex-shrink:0}
   .mypage-name{font-size:18px;font-weight:900}
@@ -276,6 +281,20 @@
         </div>
         <button class="auth-btn" id="authBtn" onclick="doAuth()">ログイン</button>
         <div class="auth-note" id="authNote"></div>
+        <div class="forgot-row show" id="forgotRow"><button type="button" class="text-link" onclick="forgotPassword()">パスワードをお忘れですか？</button></div>
+      </div>
+    </div>
+  </div>
+  <div id="resetScreen" class="reset-overlay" style="display:none">
+    <div class="auth-wrap">
+      <div class="auth-logo"><div class="big"><svg viewBox="0 0 64 38" aria-hidden="true"><path d="M9 13 L31 26 C22 30 14 29 11 24 C8 21 8 15 9 13 Z" fill="#E4002B"/><path d="M55 13 L33 26 C42 30 50 29 53 24 C56 21 56 15 55 13 Z" fill="#E4002B"/></svg>コンサつどーれ</div></div>
+      <div class="auth-card">
+        <div class="reset-title">新しいパスワードを設定</div>
+        <div class="reset-desc">メールのリンクから開けています。<br>新しいパスワードを入力してください。</div>
+        <label>新しいパスワード</label>
+        <input id="resetPass" type="password" placeholder="6文字以上" autocomplete="new-password">
+        <button class="auth-btn" onclick="submitNewPassword()">パスワードを変更する</button>
+        <div class="auth-note" id="resetNote"></div>
       </div>
     </div>
   </div>
@@ -555,7 +574,7 @@
   let docFrom='auth';
   function openDoc(which,from){docFrom=from||'auth';go(which);}
   function backFromDoc(){ if(docFrom==='mypage')openMypage();else go('auth'); }
-  function setMode(mode){authMode=mode;document.getElementById('tab-login').classList.toggle('on',mode==='login');document.getElementById('tab-signup').classList.toggle('on',mode==='signup');document.getElementById('nameField').classList.toggle('show',mode==='signup');document.getElementById('consentRow').classList.toggle('show',mode==='signup');document.getElementById('authBtn').textContent=mode==='login'?'ログイン':'登録する';document.getElementById('authNote').textContent='';}
+  function setMode(mode){authMode=mode;document.getElementById('tab-login').classList.toggle('on',mode==='login');document.getElementById('tab-signup').classList.toggle('on',mode==='signup');document.getElementById('nameField').classList.toggle('show',mode==='signup');document.getElementById('consentRow').classList.toggle('show',mode==='signup');document.getElementById('forgotRow').classList.toggle('show',mode==='login');document.getElementById('authBtn').textContent=mode==='login'?'ログイン':'登録する';document.getElementById('authNote').textContent='';}
   async function doAuth(){
     const email=document.getElementById('authEmail').value.trim();const pass=document.getElementById('authPass').value;
     const note=document.getElementById('authNote');const btn=document.getElementById('authBtn');
@@ -565,18 +584,58 @@
       const name=document.getElementById('authName').value.trim();
       if(!name){note.textContent='ニックネームを入力してください';btn.disabled=false;return;}
       if(!document.getElementById('authAgree').checked){note.textContent='利用規約とプライバシーポリシーへの同意が必要です';btn.disabled=false;return;}
-      const {data,error}=await supa.auth.signUp({email,password:pass});
+      const {data,error}=await supa.auth.signUp({email,password:pass,options:{data:{name}}});
       if(error){note.textContent='登録できませんでした：'+error.message;btn.disabled=false;return;}
-      await supa.from('profiles').insert({id:data.user.id,name});
+      if(!data.session){
+        // メール確認オン：確認メールのリンクを開くまではログインできない
+        setMode('login');
+        document.getElementById('authNote').innerHTML='確認メールを '+esc(email)+' に送りました。<br>メール内のリンクを開くと登録が完了します。完了後、この画面からログインしてください。';
+        btn.disabled=false;return;
+      }
+      // メール確認オフ：そのままログイン（プロフィールは afterLogin で作成）
       toast('登録できました！');await afterLogin();
     }else{
       const {error}=await supa.auth.signInWithPassword({email,password:pass});
-      if(error){note.textContent='ログインできませんでした：'+error.message;btn.disabled=false;return;}
+      if(error){
+        const m=(error.message||'').toLowerCase();
+        if(m.indexOf('confirm')>=0){note.textContent='メール確認がまだ完了していません。受信した確認メールのリンクを開いてください。';}
+        else if(m.indexOf('invalid')>=0){note.textContent='メールアドレスまたはパスワードが正しくありません。';}
+        else{note.textContent='ログインできませんでした：'+error.message;}
+        btn.disabled=false;return;
+      }
       await afterLogin();
     }
     btn.disabled=false;
   }
   async function signOut(){await supa.auth.signOut();me=null;myProfile=null;document.getElementById('appHeader').style.display='none';document.getElementById('navbar').style.display='none';go('auth');}
+  // 認証直後にプロフィール行が無ければ作る（メール確認オンでも確実に作成されるように）
+  async function ensureProfile(){
+    if(!me)return;
+    const {data:existing}=await supa.from('profiles').select('id').eq('id',me.id).maybeSingle();
+    if(existing)return;
+    const nm=(me.user_metadata&&me.user_metadata.name)?me.user_metadata.name:'サポーター';
+    const {error}=await supa.from('profiles').insert({id:me.id,name:nm});
+    if(error)console.error(error);
+  }
+  // パスワード再設定メールを送る
+  async function forgotPassword(){
+    const email=document.getElementById('authEmail').value.trim();const note=document.getElementById('authNote');
+    if(!email){note.textContent='先にメールアドレスを入力してから押してください';return;}
+    const {error}=await supa.auth.resetPasswordForEmail(email,{redirectTo:location.origin});
+    if(error){note.textContent='送信に失敗しました：'+error.message;return;}
+    note.innerHTML='パスワード再設定用のメールを '+esc(email)+' に送りました。<br>メール内のリンクを開いて、新しいパスワードを設定してください。';
+  }
+  function showResetScreen(){document.getElementById('resetScreen').style.display='flex';}
+  // メールのリンクから戻ってきたあと、新しいパスワードを保存
+  async function submitNewPassword(){
+    const p=document.getElementById('resetPass').value;const note=document.getElementById('resetNote');
+    if(!p||p.length<6){note.textContent='6文字以上で入力してください';return;}
+    const {error}=await supa.auth.updateUser({password:p});
+    if(error){note.textContent='変更に失敗しました：'+error.message;return;}
+    alert('パスワードを変更しました。新しいパスワードでログインしてください。');
+    await supa.auth.signOut();
+    location.replace(location.origin+location.pathname);
+  }
   // 退会（アカウント削除）。DB側の delete_own_account 関数で本人のデータと認証情報をまとめて削除
   async function deleteAccount(){
     if(!confirm('本当に退会しますか？\n\nあなたのプロフィール・観戦予定・募集・トークなどがすべて削除され、元に戻せません。'))return;
@@ -589,6 +648,8 @@
   }
   async function afterLogin(){
     const {data:{user}}=await supa.auth.getUser();me=user;
+    if(!me)return;
+    await ensureProfile();
     const {data:prof}=await supa.from('profiles').select('*').eq('id',me.id).maybeSingle();
     myProfile=prof||{id:me.id,name:'サポーター'};
     await loadBlocks();
@@ -1212,8 +1273,11 @@
 
   async function start(){
     if(typeof SUPABASE_URL==='undefined'||typeof SUPABASE_KEY==='undefined'||SUPABASE_URL.indexOf('ここに')>=0||SUPABASE_KEY.indexOf('ここに')>=0){document.getElementById('auth').innerHTML='<div class="config-warn">⚙️ 設定がまだです<br><br>このindex.htmlと同じフォルダに <b>config.js</b> を置き、その中の SUPABASE_URL と SUPABASE_KEY に、あなたのSupabaseの情報を入れて保存してください。</div>';return;}
+    const initialHash=location.hash||'';
     supa=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+    supa.auth.onAuthStateChange((event)=>{ if(event==='PASSWORD_RECOVERY'){showResetScreen();} });
     setMode('login');
+    if(initialHash.indexOf('type=recovery')>=0){showResetScreen();return;}
     const {data:{session}}=await supa.auth.getSession();
     if(session){await afterLogin();}
   }
